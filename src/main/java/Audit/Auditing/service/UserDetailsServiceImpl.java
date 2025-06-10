@@ -4,6 +4,7 @@ import Audit.Auditing.dto.UserDto;
 import Audit.Auditing.model.Role;
 import Audit.Auditing.model.User;
 import Audit.Auditing.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -25,7 +26,6 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Since the login form accepts username or email, we'll check for both.
         User user = userRepository.findByUsernameOrEmail(username, username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username or email: " + username));
 
@@ -42,11 +42,11 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
         User user = new User();
         user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());
-        user.setPassword(passwordEncoder.encode(userDto.getPassword())); // Enkripsi password
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
 
         String roleStr = userDto.getRole().toUpperCase();
         user.setRole(Role.valueOf(roleStr));
-        user.setEnabled(true); // Default user aktif
+        user.setEnabled(true);
         return userRepository.save(user);
     }
 
@@ -63,5 +63,33 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
     @Override
     public List<User> findAllUsers() {
         return userRepository.findAll();
+    }
+
+    @Override
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    @Override
+    public User updateUser(Long id, UserDto userDto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+
+        user.setUsername(userDto.getUsername());
+        user.setEmail(userDto.getEmail());
+        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        }
+        user.setRole(Role.valueOf(userDto.getRole().toUpperCase()));
+
+        return userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new EntityNotFoundException("User not found with id: " + id);
+        }
+        userRepository.deleteById(id);
     }
 }
