@@ -27,14 +27,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/error").permitAll()
-                                // Hanya ADMIN yang bisa akses halaman /admin/**
-                                .requestMatchers("/admin/**", "/users/add", "/users/save", "/users/list").hasAuthority("ADMIN")
-                                // KEPALASPI bisa akses dashboard dan fitur spesifiknya
+                                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/error", "/webjars/**").permitAll()
+                                .requestMatchers("/admin/**").hasAuthority("ADMIN")
                                 .requestMatchers("/kepalaspi/**").hasAuthority("KEPALASPI")
-                                // SEKRETARIS bisa akses dashboard dan fitur spesifiknya
                                 .requestMatchers("/sekretaris/**").hasAuthority("SEKRETARIS")
-                                // KARYAWAN bisa akses dashboard dan fitur spesifiknya
                                 .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI")
                                 .requestMatchers("/dashboard").hasAnyAuthority("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI")
                                 .anyRequest().authenticated()
@@ -56,7 +52,7 @@ public class SecurityConfig {
                                 .permitAll()
                 )
                 .exceptionHandling(exceptionHandling ->
-                        exceptionHandling.accessDeniedPage("/access-denied") // Halaman kustom untuk akses ditolak
+                        exceptionHandling.accessDeniedPage("/access-denied")
                 );
         return http.build();
     }
@@ -73,10 +69,4 @@ public class SecurityConfig {
         authProvider.setUserDetailsService(userDetailsService);
         return authProvider;
     }
-
-    // // UserDetailsService bean sudah di-autowired, tidak perlu didefinisikan lagi di sini jika sudah ada di UserDetailsServiceImpl
-    // @Bean
-    // public UserDetailsService userDetailsService() {
-    //     return userDetailsService;
-    // }
 }
