@@ -7,9 +7,9 @@
 <main class="container">
     <h2>Daftar Pengguna Sistem</h2>
     <hr>
-    <div th:if="${param.success}" class="alert alert-success">
-        User baru berhasil ditambahkan!
-    </div>
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -25,6 +25,7 @@
                         <th>Email</th>
                         <th>Role</th>
                         <th>Status</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,9 +38,14 @@
                             <span th:if="${user.enabled}" class="badge bg-success">Aktif</span>
                             <span th:unless="${user.enabled}" class="badge bg-danger">Non-Aktif</span>
                         </td>
+                        <td>
+                            <a th:href="@{/admin/users/edit/{id}(id=${user.id})}" class="btn btn-warning btn-sm">Edit</a>
+                            <a th:href="@{/admin/users/delete/{id}(id=${user.id})}" class="btn btn-danger btn-sm"
+                               onclick="return confirm('Apakah Anda yakin ingin menghapus user ini?');">Hapus</a>
+                        </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(users)}">
-                        <td colspan="5" class="text-center">Tidak ada data user.</td>
+                        <td colspan="6" class="text-center">Tidak ada data user.</td>
                     </tr>
                 </tbody>
             </table>

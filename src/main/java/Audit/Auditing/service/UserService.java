@@ -11,4 +11,7 @@ public interface UserService {
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
     List<User> findAllUsers();
+    Optional<User> findById(Long id); // Add this for finding user to update/delete
+    User updateUser(Long id, UserDto userDto); // Add this to update a user
+    void deleteUser(Long id); // Add this to delete a user
 }
