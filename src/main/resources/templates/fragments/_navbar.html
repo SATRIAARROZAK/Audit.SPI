@@ -32,12 +32,32 @@
                 </li>
             </ul>
             <div class="d-flex text-white align-items-center">
+                 <img th:if="${#authentication.principal.user.photoPath}"
+                     th:src="@{'/profile-photos/' + ${#authentication.principal.user.photoPath}}"
+                     class="rounded-circle me-2" alt="Foto Profil" style="width: 40px; height: 40px; object-fit: cover;">
+                
+                <img th:unless="${#authentication.principal.user.photoPath}"
+                     th:src="@{https://via.placeholder.com/40}" 
+                     class="rounded-circle me-2" alt="Foto Profil">
+
                 <span class="navbar-text me-3">
-                    Halo, <strong sec:authentication="name">Nama Pengguna</strong>
+                    Halo, <strong th:text="${#authentication.principal.user.fullName ?: #authentication.name}">Nama Pengguna</strong>
                 </span>
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-outline-light">Logout</button>
-                </form>
+
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        Menu
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                        <li><a class="dropdown-item" th:href="@{/profile/edit}">Edit Profil</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" class="d-inline">
+                                <button type="submit" class="dropdown-item">Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>

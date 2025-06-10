@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/_header :: header('Lengkapi Profil')}"></head>
+<body class="bg-light">
+
+<main class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 mt-5">
+            <div class="card">
+                <div class="card-header">
+                    <h2 th:if="${isFirstTime}">Selamat Datang! Silakan Lengkapi Profil Anda</h2>
+                    <h2 th:unless="${isFirstTime}">Edit Profil</h2>
+                </div>
+                <div class="card-body">
+                    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+                    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+                    <form th:action="@{/profile/update}" th:object="${profileDto}" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Nama Lengkap:</label>
+                            <input type="text" id="fullName" class="form-control" th:field="*{fullName}" required />
+                            <div th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}" class="text-danger small mt-1"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="position" class="form-label">Jabatan:</label>
+                            <input type="text" id="position" class="form-control" th:field="*{position}" required />
+                            <div th:if="${#fields.hasErrors('position')}" th:errors="*{position}" class="text-danger small mt-1"></div>
+                        </div>
+                         <div class="mb-3">
+                            <label for="phoneNumber" class="form-label">No. Telepon:</label>
+                            <input type="text" id="phoneNumber" class="form-control" th:field="*{phoneNumber}" required />
+                            <div th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}" class="text-danger small mt-1"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Alamat Rumah:</label>
+                            <textarea id="address" class="form-control" rows="3" th:field="*{address}" required></textarea>
+                            <div th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="text-danger small mt-1"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="photo" class="form-label">Upload Foto (Opsional):</label>
+                            <input type="file" id="photo" class="form-control" th:field="*{photo}" accept="image/*" />
+                            <small class="form-text text-muted">Format yang didukung: JPG, PNG. Ukuran maks: 2MB.</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Simpan Profil</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/_footer :: footer}"></div>
+</body>
+</html>

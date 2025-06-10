@@ -1,5 +1,7 @@
 package Audit.Auditing.service;
 
+import Audit.Auditing.config.CustomUserDetails;
+import Audit.Auditing.dto.ProfileDto;
 import Audit.Auditing.dto.UserDto;
 import Audit.Auditing.model.Role;
 import Audit.Auditing.model.User;
@@ -11,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,18 +27,16 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Since the login form accepts username or email, we'll check for both.
         User user = userRepository.findByUsernameOrEmail(username, username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username or email: " + username));
-
-        return org.springframework.security.core.userdetails.User
-                .withUsername(user.getUsername())
-                .password(user.getPassword())
-                .authorities(user.getRole().getAuthority())
-                .disabled(!user.isEnabled())
-                .build();
+        
+        // Gunakan CustomUserDetails
+        return new CustomUserDetails(user);
     }
 
     @Override
@@ -97,5 +98,26 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
             throw new EntityNotFoundException("User not found with id: " + id);
         }
         userRepository.deleteById(id);
+    }
+
+     @Override
+    @Transactional
+    public User updateProfile(String username, ProfileDto profileDto) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
+
+        // Simpan foto jika ada yang diunggah
+        if (profileDto.getPhoto() != null && !profileDto.getPhoto().isEmpty()) {
+            String fileName = fileStorageService.storeFile(profileDto.getPhoto());
+            user.setPhotoPath(fileName);
+        }
+
+        user.setFullName(profileDto.getFullName());
+        user.setPosition(profileDto.getPosition());
+        user.setPhoneNumber(profileDto.getPhoneNumber());
+        user.setAddress(profileDto.getAddress());
+        user.setProfileComplete(true); // Tandai profil sebagai lengkap
+
+        return userRepository.save(user);
     }
 }

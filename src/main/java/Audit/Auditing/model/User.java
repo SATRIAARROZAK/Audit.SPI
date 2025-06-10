@@ -31,4 +31,24 @@ public class User {
     private Role role;
 
     private boolean enabled = true; // Tambahkan field enabled, default true
+
+
+    // -- Tambahan untuk Profil Pengguna --
+    @Column(name = "full_name")
+    private String fullName;
+
+    @Column(name = "photo_path")
+    private String photoPath; // Path ke file foto
+
+    private String position; // Jabatan
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(columnDefinition = "TEXT")
+    private String address;
+
+    // Penanda apakah profil sudah diisi
+    @Column(name = "profile_complete", nullable = false)
+    private boolean profileComplete = false;
 }

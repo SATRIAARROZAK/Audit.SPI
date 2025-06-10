@@ -1,5 +1,6 @@
 package Audit.Auditing.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -11,20 +12,22 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // The @Autowired field for UserDetailsServiceImpl has been removed to break the
-    // cycle.
+    @Autowired
+    private AuthenticationSuccessHandler authenticationSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("/login", "/register", "/css/**", "/js/**", "/error").permitAll()
+                        // Izinkan akses ke URL profil dan foto
+                        .requestMatchers("/login", "/register", "/css/**", "/js/**", "/error", "/profile/edit", "/profile/update", "/profile-photos/**").permitAll()
                         // Hanya ADMIN yang bisa akses halaman /admin/**
                         .requestMatchers("/admin/**").hasAuthority("ADMIN") // FIX: Simplified and corrected rule
                         // KEPALASPI bisa akses dashboard dan fitur spesifiknya
@@ -38,7 +41,8 @@ public class SecurityConfig {
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")
                         .loginProcessingUrl("/perform_login")
-                        .defaultSuccessUrl("/dashboard", true)
+                        // Gunakan custom success handler
+                        .successHandler(authenticationSuccessHandler)
                         .failureUrl("/login?error=true")
                         .permitAll())
                 .logout(logout -> logout
@@ -47,11 +51,7 @@ public class SecurityConfig {
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll())
-                .exceptionHandling(exceptionHandling -> exceptionHandling.accessDeniedPage("/access-denied") // Halaman
-                                                                                                             // kustom
-                                                                                                             // untuk
-                                                                                                             // akses
-                                                                                                             // ditolak
+                .exceptionHandling(exceptionHandling -> exceptionHandling.accessDeniedPage("/access-denied")
                 );
         return http.build();
     }
@@ -66,7 +66,7 @@ public class SecurityConfig {
             PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setPasswordEncoder(passwordEncoder);
-        authProvider.setUserDetailsService(userDetailsService); // Inject the service here
+        authProvider.setUserDetailsService(userDetailsService);
         return authProvider;
     }
 }
