@@ -79,10 +79,14 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
 
         user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());
+
+        // LOGIKA INI SUDAH BENAR: hanya update jika password diisi
         if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         }
-        user.setRole(Role.valueOf(userDto.getRole().toUpperCase()));
+
+        // Pastikan ini menggunakan toLowerCase() untuk role
+        user.setRole(Role.valueOf(userDto.getRole().toLowerCase()));
 
         return userRepository.save(user);
     }
