@@ -26,6 +26,7 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Since the login form accepts username or email, we'll check for both.
         User user = userRepository.findByUsernameOrEmail(username, username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username or email: " + username));
 
@@ -42,11 +43,12 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
         User user = new User();
         user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());
-        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        user.setPassword(passwordEncoder.encode(userDto.getPassword())); // Enkripsi password
 
-        String roleStr = userDto.getRole().toUpperCase();
+        // PERBAIKAN: Mengubah role menjadi lowercase agar cocok dengan nama Enum
+        String roleStr = userDto.getRole().toLowerCase(); // Sebelumnya .toUpperCase()
         user.setRole(Role.valueOf(roleStr));
-        user.setEnabled(true);
+        user.setEnabled(true); // Default user aktif
         return userRepository.save(user);
     }
 

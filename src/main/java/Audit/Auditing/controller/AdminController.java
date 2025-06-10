@@ -16,24 +16,26 @@ import java.util.List;
 import java.util.Optional;
 
 @Controller
-@RequestMapping("/admin")
+@RequestMapping("/admin") // Semua endpoint di controller ini diawali /admin
 public class AdminController {
 
     @Autowired
     private UserService userService;
 
+    // Daftar role yang bisa dipilih
     private final List<String> availableRoles = Arrays.asList("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI");
 
     @GetMapping("/users/add")
     public String showAddUserForm(Model model) {
         model.addAttribute("userDto", new UserDto());
-        model.addAttribute("availableRoles", availableRoles);
-        return "add-user";
+        model.addAttribute("availableRoles", availableRoles); // Kirim daftar role ke view
+        return "add-user"; // FIX: Removed "admin/" prefix
     }
 
     @PostMapping("/users/save")
     public String saveUser(@Valid @ModelAttribute("userDto") UserDto userDto,
-                           BindingResult result, Model model, RedirectAttributes redirectAttributes) {
+                           BindingResult result, Model model, RedirectAttributes redirectAttributes) { // Tambahkan RedirectAttributes
+        // Cek validasi custom jika diperlukan (misal username/email sudah ada)
         if (userService.findByUsername(userDto.getUsername()).isPresent()) {
             result.rejectValue("username", "username.exists", "Username sudah digunakan");
         }
@@ -43,19 +45,20 @@ public class AdminController {
 
         if (result.hasErrors()) {
             model.addAttribute("availableRoles", availableRoles);
-            return "add-user";
+            return "add-user"; // FIX: Removed "admin/" prefix
         }
 
         userService.saveUser(userDto);
+        // PERBAIKAN: Menggunakan flash attribute untuk pesan sukses
         redirectAttributes.addFlashAttribute("successMessage", "User baru berhasil ditambahkan!");
-        return "redirect:/admin/users/list";
+        return "redirect:/admin/users/list"; // Hapus parameter "?success"
     }
 
     @GetMapping("/users/list")
     public String listUsers(Model model) {
         List<User> users = userService.findAllUsers();
         model.addAttribute("users", users);
-        return "list-user";
+        return "list-user"; // FIX: Removed "admin/" prefix and corrected to singular "list-user"
     }
 
     @GetMapping("/users/edit/{id}")
