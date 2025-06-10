@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f4; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        p { color: #555; }
+        nav ul { list-style-type: none; padding: 0; }
+        nav ul li { display: inline; margin-right: 10px; }
+        nav ul li a { color: #007bff; text-decoration: none; }
+        nav ul li a:hover { text-decoration: underline; }
+        .user-info { margin-bottom: 20px; }
+        .logout-button { background-color: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        .logout-button:hover { background-color: #c82333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Selamat Datang di Dashboard Aplikasi Auditing!</h1>
+
+        <div class="user-info">
+            <p>Halo, <strong sec:authentication="name">Nama Pengguna</strong>!</p>
+            <p>Role Anda: <span sec:authentication="principal.authorities"></span></p>
+        </div>
+
+        <nav>
+            <ul>
+                <li sec:authorize="hasAuthority('ADMIN')">
+                    <a th:href="@{/admin/users/add}">Tambah User Baru</a>
+                </li>
+                <li sec:authorize="hasAuthority('ADMIN')">
+                    <a th:href="@{/admin/users/list}">Lihat Daftar User</a>
+                </li>
+                <li sec:authorize="hasAuthority('KEPALASPI')">
+                    <a th:href="@{/kepalaspi/laporan}">Lihat Laporan SPI</a>
+                </li>
+                 <li sec:authorize="hasAuthority('SEKRETARIS')">
+                    <a th:href="@{/sekretaris/jadwal}">Kelola Jadwal Audit</a>
+                </li>
+                 <li sec:authorize="hasAuthority('PEGAWAI')">
+                    <a th:href="@{/pegawai/tugas}">Lihat Tugas Saya</a>
+                </li>
+            </ul>
+        </nav>
+
+        <div style="margin-top: 30px;">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="logout-button">Logout</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

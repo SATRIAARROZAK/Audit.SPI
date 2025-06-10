@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Akses Ditolak</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 90vh; background-color: #f8f9fa; color: #343a40; margin:0; }
+        .container { text-align: center; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { font-size: 3em; color: #dc3545; margin-bottom: 0.5em; }
+        p { font-size: 1.2em; margin-bottom: 1em; }
+        a { color: #007bff; text-decoration: none; font-weight: bold; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>403 - Akses Ditolak</h1>
+        <p>Maaf, Anda tidak memiliki izin untuk mengakses halaman ini.</p>
+        <p><a th:href="@{/dashboard}">Kembali ke Dashboard</a> atau <a th:href="@{/login}">Login</a></p>
+    </div>
+</body>
+</html>
