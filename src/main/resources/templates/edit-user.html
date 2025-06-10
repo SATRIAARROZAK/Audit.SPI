@@ -26,7 +26,7 @@
                         <div class="mb-3">
                             <label for="password" class="form-label">Password Baru (Opsional):</label>
                             <input type="password" id="password" class="form-control" th:field="*{password}" />
-                            <small class="form-text text-muted">Kosongkan jika tidak ingin mengubah password. Jika diisi, minimal 8 karakter.</small>
+                             <small class="form-text text-muted">Kosongkan jika tidak ingin mengubah password. Jika diisi, minimal 8 karakter.</small>
                             <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger small mt-1"></div>
                         </div>
                         <div class="mb-3">

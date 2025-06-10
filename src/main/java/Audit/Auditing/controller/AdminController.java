@@ -24,6 +24,7 @@ public class AdminController {
 
     private final List<String> availableRoles = Arrays.asList("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI");
 
+    // Menampilkan form tambah user
     @GetMapping("/users/add")
     public String showAddUserForm(Model model) {
         model.addAttribute("userDto", new UserDto());
@@ -31,23 +32,23 @@ public class AdminController {
         return "add-user";
     }
 
+    // Menyimpan user BARU
     @PostMapping("/users/save")
     public String saveUser(@Valid @ModelAttribute("userDto") UserDto userDto,
                            BindingResult result, Model model, RedirectAttributes redirectAttributes) {
 
-        // Validasi custom untuk username/email duplikat
         if (userService.findByUsername(userDto.getUsername()).isPresent()) {
             result.rejectValue("username", "username.exists", "Username sudah digunakan");
         }
         if (userService.findByEmail(userDto.getEmail()).isPresent()) {
             result.rejectValue("email", "email.exists", "Email sudah digunakan");
         }
-
-        // Validasi manual untuk password saat membuat user baru
+        
+        // Validasi password khusus untuk user BARU (wajib diisi, min 8 karakter)
         if (userDto.getPassword() == null || userDto.getPassword().isEmpty()) {
             result.rejectValue("password", "password.notempty", "Password tidak boleh kosong");
-        } else if (userDto.getPassword().length() < 6) {
-            result.rejectValue("password", "password.size", "Password minimal 6 karakter");
+        } else if (userDto.getPassword().length() < 8) {
+            result.rejectValue("password", "password.size", "Password minimal 8 karakter");
         }
 
         if (result.hasErrors()) {
@@ -60,6 +61,7 @@ public class AdminController {
         return "redirect:/admin/users/list";
     }
 
+    // Menampilkan daftar user
     @GetMapping("/users/list")
     public String listUsers(Model model) {
         List<User> users = userService.findAllUsers();
@@ -67,19 +69,16 @@ public class AdminController {
         return "list-user";
     }
 
+    // Menampilkan form EDIT user
     @GetMapping("/users/edit/{id}")
     public String showEditUserForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
-        Optional<User> userOptional = userService.findById(id);
-        if (userOptional.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "User tidak ditemukan.");
-            return "redirect:/admin/users/list";
-        }
-        User user = userOptional.get();
+        User user = userService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
+        
         UserDto userDto = new UserDto();
         userDto.setUsername(user.getUsername());
         userDto.setEmail(user.getEmail());
         userDto.setRole(user.getRole().name());
-        // Password sengaja tidak di-set agar field di form kosong
 
         model.addAttribute("userDto", userDto);
         model.addAttribute("userId", id);
@@ -87,20 +86,25 @@ public class AdminController {
         return "edit-user";
     }
 
+    // Meng-UPDATE user yang ada
     @PostMapping("/users/update/{id}")
     public String updateUser(@PathVariable("id") Long id, @Valid @ModelAttribute("userDto") UserDto userDto,
                              BindingResult result, Model model, RedirectAttributes redirectAttributes) {
-        // Validasi duplikasi username/email untuk user yang berbeda
-        userService.findByUsername(userDto.getUsername()).ifPresent(user -> {
-            if (!user.getId().equals(id)) {
-                result.rejectValue("username", "username.exists", "Username sudah digunakan oleh user lain.");
-            }
-        });
-        userService.findByEmail(userDto.getEmail()).ifPresent(user -> {
-            if (!user.getId().equals(id)) {
-                result.rejectValue("email", "email.exists", "Email sudah digunakan oleh user lain.");
-            }
-        });
+
+        Optional<User> existingUserByUsername = userService.findByUsername(userDto.getUsername());
+        if (existingUserByUsername.isPresent() && !existingUserByUsername.get().getId().equals(id)) {
+            result.rejectValue("username", "username.exists", "Username sudah digunakan oleh user lain.");
+        }
+
+        Optional<User> existingUserByEmail = userService.findByEmail(userDto.getEmail());
+        if (existingUserByEmail.isPresent() && !existingUserByEmail.get().getId().equals(id)) {
+            result.rejectValue("email", "email.exists", "Email sudah digunakan oleh user lain.");
+        }
+        
+        // Validasi password khusus untuk UPDATE (hanya jika diisi, min 8 karakter)
+        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty() && userDto.getPassword().length() < 8) {
+            result.rejectValue("password", "password.size", "Password minimal 8 karakter jika ingin diubah");
+        }
 
         if (result.hasErrors()) {
             model.addAttribute("userId", id);
@@ -113,6 +117,7 @@ public class AdminController {
         return "redirect:/admin/users/list";
     }
 
+    // Menghapus user
     @GetMapping("/users/delete/{id}")
     public String deleteUser(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
