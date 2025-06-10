@@ -30,7 +30,7 @@ public class AdminController {
     public String showAddUserForm(Model model) {
         model.addAttribute("userDto", new UserDto());
         model.addAttribute("availableRoles", availableRoles); // Kirim daftar role ke view
-        return "admin/add-user"; // Path ke template: templates/admin/add-user.html
+        return "add-user"; // FIX: Removed "admin/" prefix
     }
 
     @PostMapping("/users/save")
@@ -46,7 +46,7 @@ public class AdminController {
 
         if (result.hasErrors()) {
             model.addAttribute("availableRoles", availableRoles);
-            return "admin/add-user";
+            return "add-user"; // FIX: Removed "admin/" prefix
         }
 
         userService.saveUser(userDto);
@@ -57,6 +57,6 @@ public class AdminController {
     public String listUsers(Model model) {
         List<User> users = userService.findAllUsers();
         model.addAttribute("users", users);
-        return "admin/list-users"; // Path ke template: templates/admin/list-users.html
+        return "list-user"; // FIX: Removed "admin/" prefix and corrected to singular "list-user"
     }
 }
