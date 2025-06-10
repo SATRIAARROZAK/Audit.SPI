@@ -27,8 +27,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/error", "/webjars/**").permitAll()
-                                .requestMatchers("/admin/**").hasAuthority("ADMIN")
+                                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/error").permitAll()
+                                .requestMatchers("/admin/**").hasAuthority("ADMIN") // Simplified Rule
                                 .requestMatchers("/kepalaspi/**").hasAuthority("KEPALASPI")
                                 .requestMatchers("/sekretaris/**").hasAuthority("SEKRETARIS")
                                 .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI")

@@ -1,60 +1,52 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Daftar User</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f4; }
-        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h2 { color: #333; text-align: center; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #007bff; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        .action-links a { margin-right: 8px; color: #007bff; text-decoration: none; }
-        .action-links a:hover { text-decoration: underline; }
-        .back-link, .add-link { display: inline-block; margin-bottom:20px; padding: 8px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; }
-        .add-link { background-color: #28a745; margin-left: 10px; }
-        .back-link:hover, .add-link:hover { opacity: 0.9; }
-        .alert-success { padding: 10px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 4px; margin-bottom: 15px; }
-    </style>
-</head>
+<head th:replace="~{fragments/_header :: header('Daftar User')}"></head>
 <body>
-    <div class="container">
-        <h2>Daftar Pengguna Sistem</h2>
+<div th:replace="~{fragments/_navbar :: navbar}"></div>
 
-        <div th:if="${param.success}" class="alert-success">
-            User baru berhasil ditambahkan!
-        </div>
-
-        <div>
-            <a th:href="@{/dashboard}" class="back-link">Kembali ke Dashboard</a>
-            <a th:href="@{/admin/users/add}" class="add-link">Tambah User Baru</a>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Enabled</th>
-                    </tr>
-            </thead>
-            <tbody>
-                <tr th:each="user : ${users}">
-                    <td th:text="${user.id}"></td>
-                    <td th:text="${user.username}"></td>
-                    <td th:text="${user.email}"></td>
-                    <td th:text="${user.role}"></td>
-                    <td th:text="${user.enabled}"></td>
-                    </tr>
-                <tr th:if="${#lists.isEmpty(users)}">
-                    <td colspan="5" style="text-align: center;">Tidak ada data user.</td>
-                </tr>
-            </tbody>
-        </table>
+<main class="container">
+    <h2>Daftar Pengguna Sistem</h2>
+    <hr>
+    <div th:if="${param.success}" class="alert alert-success">
+        User baru berhasil ditambahkan!
     </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Data Semua User</span>
+            <a th:href="@{/admin/users/add}" class="btn btn-primary btn-sm">Tambah User Baru</a>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="user : ${users}">
+                        <td th:text="${user.id}"></td>
+                        <td th:text="${user.username}"></td>
+                        <td th:text="${user.email}"></td>
+                        <td><span class="badge bg-info" th:text="${user.role}"></span></td>
+                        <td>
+                            <span th:if="${user.enabled}" class="badge bg-success">Aktif</span>
+                            <span th:unless="${user.enabled}" class="badge bg-danger">Non-Aktif</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td colspan="5" class="text-center">Tidak ada data user.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/_footer :: footer}"></div>
 </body>
 </html>

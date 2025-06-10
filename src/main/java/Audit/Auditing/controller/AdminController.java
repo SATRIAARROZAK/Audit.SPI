@@ -17,26 +17,24 @@ import java.util.Arrays;
 import java.util.List;
 
 @Controller
-@RequestMapping("/admin") // Semua endpoint di controller ini diawali /admin
+@RequestMapping("/admin")
 public class AdminController {
 
     @Autowired
     private UserService userService;
 
-    // Daftar role yang bisa dipilih
     private final List<String> availableRoles = Arrays.asList("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI");
 
     @GetMapping("/users/add")
     public String showAddUserForm(Model model) {
         model.addAttribute("userDto", new UserDto());
-        model.addAttribute("availableRoles", availableRoles); // Kirim daftar role ke view
-        return "admin/add-user"; // Path ke template: templates/admin/add-user.html
+        model.addAttribute("availableRoles", availableRoles);
+        return "admin/add-user"; // CORRECTED PATH
     }
 
     @PostMapping("/users/save")
     public String saveUser(@Valid @ModelAttribute("userDto") UserDto userDto,
                            BindingResult result, Model model) {
-        // Cek validasi custom jika diperlukan (misal username/email sudah ada)
         if (userService.findByUsername(userDto.getUsername()).isPresent()) {
             result.rejectValue("username", "username.exists", "Username sudah digunakan");
         }
@@ -46,17 +44,17 @@ public class AdminController {
 
         if (result.hasErrors()) {
             model.addAttribute("availableRoles", availableRoles);
-            return "admin/add-user";
+            return "admin/add-user"; // CORRECTED PATH
         }
 
         userService.saveUser(userDto);
-        return "redirect:/admin/users/list?success"; // Redirect ke daftar user dengan notifikasi sukses
+        return "redirect:/admin/users/list?success";
     }
 
     @GetMapping("/users/list")
     public String listUsers(Model model) {
         List<User> users = userService.findAllUsers();
         model.addAttribute("users", users);
-        return "admin/list-users"; // Path ke template: templates/admin/list-users.html
+        return "admin/list-user"; // Path was incorrect, corrected to list-user
     }
 }
