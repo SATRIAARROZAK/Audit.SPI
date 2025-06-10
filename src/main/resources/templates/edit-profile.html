@@ -36,10 +36,42 @@
                             <textarea id="address" class="form-control" rows="3" th:field="*{address}" required></textarea>
                             <div th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="text-danger small mt-1"></div>
                         </div>
+
                         <div class="mb-3">
-                            <label for="photo" class="form-label">Upload Foto (Opsional):</label>
+                            <label class="form-label">Tanda Tangan (Opsional):</label>
+                            <div th:if="${user != null && user.signaturePath != null}" class="mb-2 text-center">
+                                <p class="mb-1">Tanda Tangan Saat Ini:</p>
+                                <img th:src="@{'/profile-photos/' + ${user.signaturePath}}" alt="Tanda Tangan" style="max-width: 250px; border: 1px solid #ddd; padding: 5px;"/>
+                            </div>
+
+                            <ul class="nav nav-tabs" id="signatureTab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="draw-tab" data-bs-toggle="tab" data-bs-target="#draw-pane" type="button" role="tab" aria-controls="draw-pane" aria-selected="true">Gambar</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload-pane" type="button" role="tab" aria-controls="upload-pane" aria-selected="false">Upload</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content border border-top-0 p-3" id="signatureTabContent">
+                                <div class="tab-pane fade show active" id="draw-pane" role="tabpanel" aria-labelledby="draw-tab">
+                                    <p class="text-muted small">Gambarkan tanda tangan Anda di dalam kotak di bawah ini.</p>
+                                    <canvas id="signature-canvas" width="400" height="200" style="border: 1px dashed #ccc; cursor: crosshair; touch-action: none;"></canvas>
+                                    <br/>
+                                    <button type="button" id="clear-canvas" class="btn btn-secondary btn-sm mt-2">Hapus</button>
+                                    <input type="hidden" id="signatureDataUrl" th:field="*{signatureDataUrl}" />
+                                </div>
+                                <div class="tab-pane fade" id="upload-pane" role="tabpanel" aria-labelledby="upload-tab">
+                                    <label for="signatureImage" class="form-label">Upload gambar tanda tangan:</label>
+                                    <input type="file" id="signatureImage" class="form-control" th:field="*{signatureImage}" accept="image/png, image/jpeg, image/gif" />
+                                    <small class="form-text text-muted">Format: JPG, PNG, GIF. Ukuran maks: 2MB.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="photo" class="form-label">Upload Foto Profil (Opsional):</label>
                             <input type="file" id="photo" class="form-control" th:field="*{photo}" accept="image/*" />
-                            <small class="form-text text-muted">Format yang didukung: JPG, PNG. Ukuran maks: 2MB.</small>
+                            <small class="form-text text-muted">Format: JPG, PNG. Ukuran maks: 2MB.</small>
                         </div>
                         <button type="submit" class="btn btn-primary">Simpan Profil</button>
                     </form>
@@ -50,5 +82,106 @@
 </main>
 
 <div th:replace="~{fragments/_footer :: footer}"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('signature-canvas');
+    const hiddenInput = document.getElementById('signatureDataUrl');
+    const form = document.querySelector('form');
+    const clearButton = document.getElementById('clear-canvas');
+    
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    // Set canvas size based on its CSS-defined size to avoid distortion
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    function getPos(evt, targetCanvas) {
+        const rect = targetCanvas.getBoundingClientRect();
+        const scaleX = targetCanvas.width / rect.width;
+        const scaleY = targetCanvas.height / rect.height;
+        
+        if (evt.touches && evt.touches.length > 0) {
+            return {
+                x: (evt.touches[0].clientX - rect.left) * scaleX,
+                y: (evt.touches[0].clientY - rect.top) * scaleY
+            };
+        }
+        return {
+            x: (evt.clientX - rect.left) * scaleX,
+            y: (evt.clientY - rect.top) * scaleY
+        };
+    }
+
+    function startDrawing(e) {
+        drawing = true;
+        draw(e);
+    }
+
+    function stopDrawing() {
+        if (drawing) {
+             drawing = false;
+             ctx.beginPath();
+        }
+    }
+
+    function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = 'black';
+
+        const pos = getPos(e, canvas);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+    canvas.addEventListener('mousemove', draw);
+    
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchmove', draw);
+
+    clearButton.addEventListener('click', function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hiddenInput.value = '';
+    });
+    
+    function isCanvasBlank(c) {
+        return !c.getContext('2d')
+          .getImageData(0, 0, c.width, c.height).data
+          .some(channel => channel !== 0);
+    }
+
+    form.addEventListener('submit', function() {
+        if (!isCanvasBlank(canvas)) {
+             hiddenInput.value = canvas.toDataURL('image/png');
+        } else {
+             hiddenInput.value = '';
+        }
+    });
+
+    // UX: Clear the other input when switching tabs
+    document.getElementById('upload-tab').addEventListener('shown.bs.tab', function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hiddenInput.value = '';
+    });
+    
+    document.getElementById('draw-tab').addEventListener('shown.bs.tab', function() {
+        document.getElementById('signatureImage').value = null;
+    });
+});
+</script>
+
 </body>
 </html>

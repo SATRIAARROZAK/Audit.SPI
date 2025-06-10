@@ -32,13 +32,14 @@ public class User {
 
     private boolean enabled = true; // Tambahkan field enabled, default true
 
-
-    // -- Tambahan untuk Profil Pengguna --
     @Column(name = "full_name")
     private String fullName;
 
     @Column(name = "photo_path")
     private String photoPath; // Path ke file foto
+
+    @Column(name = "signature_path")
+    private String signaturePath; // Path ke file tanda tangan
 
     private String position; // Jabatan
 

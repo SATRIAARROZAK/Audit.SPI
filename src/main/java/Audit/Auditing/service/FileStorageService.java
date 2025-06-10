@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Base64;
 import java.util.UUID;
 
 @Service
@@ -48,6 +49,41 @@ public class FileStorageService {
             return fileName;
         } catch (IOException ex) {
             throw new RuntimeException("Gagal menyimpan file " + fileName, ex);
+        }
+    }
+
+    public String storeBase64File(String base64Data) {
+        if (base64Data == null || base64Data.isEmpty()) {
+            return null;
+        }
+
+        // Format data URL: data:image/png;base64,iVBORw0KGgo...
+        String[] parts = base64Data.split(",");
+        if (parts.length != 2) {
+             throw new RuntimeException("Format data Base64 tidak valid.");
+        }
+        
+        String imageBase64 = parts[1];
+        byte[] imageBytes = Base64.getDecoder().decode(imageBase64);
+        
+        // Tentukan ekstensi file dari metadata
+        String extension;
+        if (parts[0].contains("image/jpeg")) {
+            extension = ".jpg";
+        } else if (parts[0].contains("image/gif")) {
+            extension = ".gif";
+        } else {
+            extension = ".png"; // Default
+        }
+
+        String fileName = UUID.randomUUID().toString() + extension;
+
+        try {
+            Path targetLocation = this.fileStorageLocation.resolve(fileName);
+            Files.write(targetLocation, imageBytes);
+            return fileName;
+        } catch (IOException ex) {
+            throw new RuntimeException("Gagal menyimpan file dari Base64 " + fileName, ex);
         }
     }
 }
