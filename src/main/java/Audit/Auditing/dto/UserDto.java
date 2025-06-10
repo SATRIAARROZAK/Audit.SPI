@@ -18,13 +18,13 @@ public class UserDto {
     @NotEmpty(message = "Email tidak boleh kosong")
     @Email(message = "Format email tidak valid")
     private String email;
-
     // 2. Terapkan validasi berbeda berdasarkan grup
     // Wajib diisi hanya saat proses 'Create'
     @NotEmpty(message = "Password tidak boleh kosong", groups = Create.class)
     // Jika diisi (baik Create maupun Update), harus minimal 8 karakter.
     // Regex ini berarti: string kosong ATAU string dengan 8 karakter atau lebih.
     @Pattern(regexp = "^$|^.{8,}$", message = "Password minimal 8 karakter", groups = {Create.class, Update.class})
+
     private String password;
 
 
