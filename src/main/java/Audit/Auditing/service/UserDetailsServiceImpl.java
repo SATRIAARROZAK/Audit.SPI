@@ -26,6 +26,7 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Since the login form accepts username or email, we'll check for both.
         User user = userRepository.findByUsernameOrEmail(username, username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username or email: " + username));
 
@@ -44,41 +45,11 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
         user.setEmail(userDto.getEmail());
         user.setPassword(passwordEncoder.encode(userDto.getPassword())); // Enkripsi password
 
-        String roleStr = userDto.getRole().toUpperCase();
+        // PERBAIKAN: Mengubah role menjadi lowercase agar cocok dengan nama Enum
+        String roleStr = userDto.getRole().toLowerCase(); // Sebelumnya .toUpperCase()
         user.setRole(Role.valueOf(roleStr));
         user.setEnabled(true); // Default user aktif
         return userRepository.save(user);
-    }
-    
-    @Override
-    public User updateUser(Long id, UserDto userDto) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-
-        user.setUsername(userDto.getUsername());
-        user.setEmail(userDto.getEmail());
-        
-        // Logika untuk password opsional
-        // Hanya update password jika field diisi
-        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        }
-
-        user.setRole(Role.valueOf(userDto.getRole().toUpperCase()));
-        return userRepository.save(user);
-    }
-    
-    @Override
-    public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new EntityNotFoundException("User not found with id: " + id);
-        }
-        userRepository.deleteById(id);
-    }
-    
-    @Override
-    public Optional<User> findById(Long id) {
-        return userRepository.findById(id);
     }
 
     @Override
@@ -94,5 +65,33 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
     @Override
     public List<User> findAllUsers() {
         return userRepository.findAll();
+    }
+
+    @Override
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    @Override
+    public User updateUser(Long id, UserDto userDto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+
+        user.setUsername(userDto.getUsername());
+        user.setEmail(userDto.getEmail());
+        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        }
+        user.setRole(Role.valueOf(userDto.getRole().toUpperCase()));
+
+        return userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new EntityNotFoundException("User not found with id: " + id);
+        }
+        userRepository.deleteById(id);
     }
 }

@@ -16,65 +16,59 @@ import java.util.List;
 import java.util.Optional;
 
 @Controller
-@RequestMapping("/admin")
+@RequestMapping("/admin") // Semua endpoint di controller ini diawali /admin
 public class AdminController {
 
     @Autowired
     private UserService userService;
 
+    // Daftar role yang bisa dipilih
     private final List<String> availableRoles = Arrays.asList("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI");
 
-    // Menampilkan form tambah user
     @GetMapping("/users/add")
     public String showAddUserForm(Model model) {
         model.addAttribute("userDto", new UserDto());
-        model.addAttribute("availableRoles", availableRoles);
-        return "add-user";
+        model.addAttribute("availableRoles", availableRoles); // Kirim daftar role ke view
+        return "add-user"; // FIX: Removed "admin/" prefix
     }
 
-    // Menyimpan user BARU
     @PostMapping("/users/save")
     public String saveUser(@Valid @ModelAttribute("userDto") UserDto userDto,
-                           BindingResult result, Model model, RedirectAttributes redirectAttributes) {
-
+                           BindingResult result, Model model, RedirectAttributes redirectAttributes) { // Tambahkan RedirectAttributes
+        // Cek validasi custom jika diperlukan (misal username/email sudah ada)
         if (userService.findByUsername(userDto.getUsername()).isPresent()) {
             result.rejectValue("username", "username.exists", "Username sudah digunakan");
         }
         if (userService.findByEmail(userDto.getEmail()).isPresent()) {
             result.rejectValue("email", "email.exists", "Email sudah digunakan");
         }
-        
-        // Validasi password khusus untuk user BARU (wajib diisi, min 8 karakter)
-        if (userDto.getPassword() == null || userDto.getPassword().isEmpty()) {
-            result.rejectValue("password", "password.notempty", "Password tidak boleh kosong");
-        } else if (userDto.getPassword().length() < 8) {
-            result.rejectValue("password", "password.size", "Password minimal 8 karakter");
-        }
 
         if (result.hasErrors()) {
             model.addAttribute("availableRoles", availableRoles);
-            return "add-user";
+            return "add-user"; // FIX: Removed "admin/" prefix
         }
 
         userService.saveUser(userDto);
+        // PERBAIKAN: Menggunakan flash attribute untuk pesan sukses
         redirectAttributes.addFlashAttribute("successMessage", "User baru berhasil ditambahkan!");
-        return "redirect:/admin/users/list";
+        return "redirect:/admin/users/list"; // Hapus parameter "?success"
     }
 
-    // Menampilkan daftar user
     @GetMapping("/users/list")
     public String listUsers(Model model) {
         List<User> users = userService.findAllUsers();
         model.addAttribute("users", users);
-        return "list-user";
+        return "list-user"; // FIX: Removed "admin/" prefix and corrected to singular "list-user"
     }
 
-    // Menampilkan form EDIT user
     @GetMapping("/users/edit/{id}")
     public String showEditUserForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
-        User user = userService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
-        
+        Optional<User> userOptional = userService.findById(id);
+        if (userOptional.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "User tidak ditemukan.");
+            return "redirect:/admin/users/list";
+        }
+        User user = userOptional.get();
         UserDto userDto = new UserDto();
         userDto.setUsername(user.getUsername());
         userDto.setEmail(user.getEmail());
@@ -86,11 +80,9 @@ public class AdminController {
         return "edit-user";
     }
 
-    // Meng-UPDATE user yang ada
     @PostMapping("/users/update/{id}")
     public String updateUser(@PathVariable("id") Long id, @Valid @ModelAttribute("userDto") UserDto userDto,
                              BindingResult result, Model model, RedirectAttributes redirectAttributes) {
-
         Optional<User> existingUserByUsername = userService.findByUsername(userDto.getUsername());
         if (existingUserByUsername.isPresent() && !existingUserByUsername.get().getId().equals(id)) {
             result.rejectValue("username", "username.exists", "Username sudah digunakan oleh user lain.");
@@ -99,11 +91,6 @@ public class AdminController {
         Optional<User> existingUserByEmail = userService.findByEmail(userDto.getEmail());
         if (existingUserByEmail.isPresent() && !existingUserByEmail.get().getId().equals(id)) {
             result.rejectValue("email", "email.exists", "Email sudah digunakan oleh user lain.");
-        }
-        
-        // Validasi password khusus untuk UPDATE (hanya jika diisi, min 8 karakter)
-        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty() && userDto.getPassword().length() < 8) {
-            result.rejectValue("password", "password.size", "Password minimal 8 karakter jika ingin diubah");
         }
 
         if (result.hasErrors()) {
@@ -117,7 +104,6 @@ public class AdminController {
         return "redirect:/admin/users/list";
     }
 
-    // Menghapus user
     @GetMapping("/users/delete/{id}")
     public String deleteUser(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
