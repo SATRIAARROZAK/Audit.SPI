@@ -1,7 +1,5 @@
 package Audit.Auditing.config;
 
-import Audit.Auditing.service.UserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -18,41 +16,42 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
+    // The @Autowired field for UserDetailsServiceImpl has been removed to break the
+    // cycle.
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
-                                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/error").permitAll()
-                                .requestMatchers("/admin/**").hasAuthority("ADMIN") // Simplified Rule
-                                .requestMatchers("/kepalaspi/**").hasAuthority("KEPALASPI")
-                                .requestMatchers("/sekretaris/**").hasAuthority("SEKRETARIS")
-                                .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI")
-                                .requestMatchers("/dashboard").hasAnyAuthority("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI")
-                                .anyRequest().authenticated()
-                )
-                .formLogin(formLogin ->
-                        formLogin
-                                .loginPage("/login")
-                                .loginProcessingUrl("/perform_login")
-                                .defaultSuccessUrl("/dashboard", true)
-                                .failureUrl("/login?error=true")
-                                .permitAll()
-                )
-                .logout(logout ->
-                        logout
-                                .logoutUrl("/logout")
-                                .logoutSuccessUrl("/login?logout=true")
-                                .invalidateHttpSession(true)
-                                .deleteCookies("JSESSIONID")
-                                .permitAll()
-                )
-                .exceptionHandling(exceptionHandling ->
-                        exceptionHandling.accessDeniedPage("/access-denied")
+                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                        .requestMatchers("/login", "/register", "/css/**", "/js/**", "/error").permitAll()
+                        // Hanya ADMIN yang bisa akses halaman /admin/**
+                        .requestMatchers("/admin/**").hasAuthority("ADMIN") // FIX: Simplified and corrected rule
+                        // KEPALASPI bisa akses dashboard dan fitur spesifiknya
+                        .requestMatchers("/kepalaspi/**").hasAuthority("KEPALASPI")
+                        // SEKRETARIS bisa akses dashboard dan fitur spesifiknya
+                        .requestMatchers("/sekretaris/**").hasAuthority("SEKRETARIS")
+                        // KARYAWAN bisa akses dashboard dan fitur spesifiknya
+                        .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI")
+                        .requestMatchers("/dashboard").hasAnyAuthority("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI")
+                        .anyRequest().authenticated())
+                .formLogin(formLogin -> formLogin
+                        .loginPage("/login")
+                        .loginProcessingUrl("/perform_login")
+                        .defaultSuccessUrl("/dashboard", true)
+                        .failureUrl("/login?error=true")
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout=true")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll())
+                .exceptionHandling(exceptionHandling -> exceptionHandling.accessDeniedPage("/access-denied") // Halaman
+                                                                                                             // kustom
+                                                                                                             // untuk
+                                                                                                             // akses
+                                                                                                             // ditolak
                 );
         return http.build();
     }
@@ -63,10 +62,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider() {
+    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setPasswordEncoder(passwordEncoder());
-        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        authProvider.setUserDetailsService(userDetailsService); // Inject the service here
         return authProvider;
     }
 }
