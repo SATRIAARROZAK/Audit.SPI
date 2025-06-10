@@ -31,34 +31,31 @@
                     <a class="nav-link" th:href="@{/pegawai/tugas}">Lihat Tugas Saya</a>
                 </li>
             </ul>
-            <div class="d-flex text-white align-items-center">
-                 <img th:if="${#authentication.principal.user.photoPath}"
-                     th:src="@{'/profile-photos/' + ${#authentication.principal.user.photoPath}}"
-                     class="rounded-circle me-2" alt="Foto Profil" style="width: 40px; height: 40px; object-fit: cover;">
-                
-                <img th:unless="${#authentication.principal.user.photoPath}"
-                     th:src="@{https://via.placeholder.com/40}" 
-                     class="rounded-circle me-2" alt="Foto Profil">
+            
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img th:if="${#authentication.principal.user.photoPath}"
+                         th:src="@{'/profile-photos/' + ${#authentication.principal.user.photoPath}}"
+                         class="rounded-circle me-2" alt="Foto Profil" style="width: 40px; height: 40px; object-fit: cover;">
+                    
+                    <img th:unless="${#authentication.principal.user.photoPath}"
+                         th:src="@{https://via.placeholder.com/40}" 
+                         class="rounded-circle me-2" alt="Foto Profil">
 
-                <span class="navbar-text me-3">
-                    Halo, <strong th:text="${#authentication.principal.user.fullName ?: #authentication.name}">Nama Pengguna</strong>
-                </span>
+                    <span th:text="${#authentication.principal.user.fullName ?: #authentication.name}">Nama Pengguna</span>
+                </a>
 
-                <div class="dropdown">
-                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                        Menu
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
-                        <li><a class="dropdown-item" th:href="@{/profile/edit}">Edit Profil</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form th:action="@{/logout}" method="post" class="d-inline">
-                                <button type="submit" class="dropdown-item">Logout</button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="userDropdown">
+                    <li><a class="dropdown-item" th:href="@{/profile/edit}">Edit Profil</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="dropdown-item">Logout</button>
+                        </form>
+                    </li>
+                </ul>
             </div>
+
         </div>
     </div>
 </nav>

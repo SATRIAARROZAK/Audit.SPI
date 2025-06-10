@@ -41,6 +41,7 @@ public class ProfileController {
 
         model.addAttribute("profileDto", profileDto);
         model.addAttribute("isFirstTime", !user.isProfileComplete());
+        model.addAttribute("user", user); // Tambahkan objek user ke model
 
         return "edit-profile";
     }
@@ -49,18 +50,25 @@ public class ProfileController {
     public String updateProfile(@Validated @ModelAttribute("profileDto") ProfileDto profileDto,
                                 BindingResult result,
                                 Principal principal,
-                                RedirectAttributes redirectAttributes) {
+                                RedirectAttributes redirectAttributes,
+                                Model model) {
 
         if (result.hasErrors()) {
+            // Jika ada error validasi, muat ulang user untuk ditampilkan di view
+            User user = userService.findByUsername(principal.getName()).orElse(null);
+            if (user != null) {
+                model.addAttribute("user", user);
+                model.addAttribute("isFirstTime", !user.isProfileComplete());
+            }
             return "edit-profile";
         }
-
         try {
             userService.updateProfile(principal.getName(), profileDto);
             redirectAttributes.addFlashAttribute("successMessage", "Profil berhasil diperbarui!");
             // Setelah profil lengkap, arahkan ke dashboard
             return "redirect:/dashboard";
         } catch (Exception e) {
+            e.printStackTrace(); // Log the exception
             redirectAttributes.addFlashAttribute("errorMessage", "Gagal memperbarui profil: " + e.getMessage());
             return "redirect:/profile/edit";
         }

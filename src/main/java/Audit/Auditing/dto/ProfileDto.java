@@ -9,6 +9,10 @@ public class ProfileDto {
 
     private MultipartFile photo;
 
+    // Field baru untuk tanda tangan
+    private MultipartFile signatureImage;
+    private String signatureDataUrl; // Untuk menampung base64 dari canvas
+
     @NotEmpty(message = "Nama lengkap tidak boleh kosong")
     private String fullName;
 

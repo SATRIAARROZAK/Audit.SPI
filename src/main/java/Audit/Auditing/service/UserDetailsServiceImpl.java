@@ -112,6 +112,17 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
             user.setPhotoPath(fileName);
         }
 
+        // Simpan tanda tangan jika ada yang diunggah
+        if (profileDto.getSignatureImage() != null && !profileDto.getSignatureImage().isEmpty()) {
+            String fileName = fileStorageService.storeFile(profileDto.getSignatureImage());
+            user.setSignaturePath(fileName);
+        } 
+        // Simpan tanda tangan dari canvas jika tidak ada file yang diunggah
+        else if (profileDto.getSignatureDataUrl() != null && !profileDto.getSignatureDataUrl().isEmpty()) {
+            String fileName = fileStorageService.storeBase64File(profileDto.getSignatureDataUrl());
+            user.setSignaturePath(fileName);
+        }
+
         user.setFullName(profileDto.getFullName());
         user.setPosition(profileDto.getPosition());
         user.setPhoneNumber(profileDto.getPhoneNumber());
