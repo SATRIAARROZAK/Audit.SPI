@@ -16,26 +16,26 @@ import java.util.List;
 import java.util.Optional;
 
 @Controller
-@RequestMapping("/admin") // Semua endpoint di controller ini diawali /admin
+@RequestMapping("/admin")
 public class AdminController {
 
     @Autowired
     private UserService userService;
 
-    // Daftar role yang bisa dipilih
     private final List<String> availableRoles = Arrays.asList("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI");
 
     @GetMapping("/users/add")
     public String showAddUserForm(Model model) {
         model.addAttribute("userDto", new UserDto());
-        model.addAttribute("availableRoles", availableRoles); // Kirim daftar role ke view
-        return "add-user"; // FIX: Removed "admin/" prefix
+        model.addAttribute("availableRoles", availableRoles);
+        return "add-user";
     }
 
     @PostMapping("/users/save")
     public String saveUser(@Valid @ModelAttribute("userDto") UserDto userDto,
-                           BindingResult result, Model model, RedirectAttributes redirectAttributes) { // Tambahkan RedirectAttributes
-        // Cek validasi custom jika diperlukan (misal username/email sudah ada)
+                           BindingResult result, Model model, RedirectAttributes redirectAttributes) {
+
+        // Validasi custom untuk username/email duplikat
         if (userService.findByUsername(userDto.getUsername()).isPresent()) {
             result.rejectValue("username", "username.exists", "Username sudah digunakan");
         }
@@ -43,22 +43,28 @@ public class AdminController {
             result.rejectValue("email", "email.exists", "Email sudah digunakan");
         }
 
+        // Validasi manual untuk password saat membuat user baru
+        if (userDto.getPassword() == null || userDto.getPassword().isEmpty()) {
+            result.rejectValue("password", "password.notempty", "Password tidak boleh kosong");
+        } else if (userDto.getPassword().length() < 6) {
+            result.rejectValue("password", "password.size", "Password minimal 6 karakter");
+        }
+
         if (result.hasErrors()) {
             model.addAttribute("availableRoles", availableRoles);
-            return "add-user"; // FIX: Removed "admin/" prefix
+            return "add-user";
         }
 
         userService.saveUser(userDto);
-        // PERBAIKAN: Menggunakan flash attribute untuk pesan sukses
         redirectAttributes.addFlashAttribute("successMessage", "User baru berhasil ditambahkan!");
-        return "redirect:/admin/users/list"; // Hapus parameter "?success"
+        return "redirect:/admin/users/list";
     }
 
     @GetMapping("/users/list")
     public String listUsers(Model model) {
         List<User> users = userService.findAllUsers();
         model.addAttribute("users", users);
-        return "list-user"; // FIX: Removed "admin/" prefix and corrected to singular "list-user"
+        return "list-user";
     }
 
     @GetMapping("/users/edit/{id}")
@@ -73,6 +79,7 @@ public class AdminController {
         userDto.setUsername(user.getUsername());
         userDto.setEmail(user.getEmail());
         userDto.setRole(user.getRole().name());
+        // Password sengaja tidak di-set agar field di form kosong
 
         model.addAttribute("userDto", userDto);
         model.addAttribute("userId", id);
@@ -83,15 +90,17 @@ public class AdminController {
     @PostMapping("/users/update/{id}")
     public String updateUser(@PathVariable("id") Long id, @Valid @ModelAttribute("userDto") UserDto userDto,
                              BindingResult result, Model model, RedirectAttributes redirectAttributes) {
-        Optional<User> existingUserByUsername = userService.findByUsername(userDto.getUsername());
-        if (existingUserByUsername.isPresent() && !existingUserByUsername.get().getId().equals(id)) {
-            result.rejectValue("username", "username.exists", "Username sudah digunakan oleh user lain.");
-        }
-
-        Optional<User> existingUserByEmail = userService.findByEmail(userDto.getEmail());
-        if (existingUserByEmail.isPresent() && !existingUserByEmail.get().getId().equals(id)) {
-            result.rejectValue("email", "email.exists", "Email sudah digunakan oleh user lain.");
-        }
+        // Validasi duplikasi username/email untuk user yang berbeda
+        userService.findByUsername(userDto.getUsername()).ifPresent(user -> {
+            if (!user.getId().equals(id)) {
+                result.rejectValue("username", "username.exists", "Username sudah digunakan oleh user lain.");
+            }
+        });
+        userService.findByEmail(userDto.getEmail()).ifPresent(user -> {
+            if (!user.getId().equals(id)) {
+                result.rejectValue("email", "email.exists", "Email sudah digunakan oleh user lain.");
+            }
+        });
 
         if (result.hasErrors()) {
             model.addAttribute("userId", id);

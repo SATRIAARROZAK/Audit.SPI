@@ -14,8 +14,8 @@ public class UserDto {
     @Email(message = "Format email tidak valid")
     private String email;
 
-    @NotEmpty(message = "Password tidak boleh kosong")
-    @Size(min = 6, message = "Password minimal 6 karakter")
+    // Password tidak lagi @NotEmpty, tapi jika diisi harus min 8 karakter
+    @Size(min = 8, message = "Password minimal 8 karakter")
     private String password;
 
     @NotEmpty(message = "Role tidak boleh kosong")
