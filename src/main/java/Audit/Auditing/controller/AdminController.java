@@ -30,7 +30,7 @@ public class AdminController {
     public String showAddUserForm(Model model) {
         model.addAttribute("userDto", new UserDto());
         model.addAttribute("availableRoles", availableRoles);
-        return "add-user";
+        return "admin/add-user";
     }
 
     @PostMapping("/users/save")
@@ -50,7 +50,7 @@ public class AdminController {
 
         if (result.hasErrors()) {
             model.addAttribute("availableRoles", availableRoles);
-            return "add-user";
+            return "admin/add-user";
         }
 
         userService.saveUser(userDto);
@@ -63,7 +63,7 @@ public class AdminController {
     public String listUsers(Model model) {
         List<User> users = userService.findAllUsers();
         model.addAttribute("users", users);
-        return "list-user";
+        return "admin/list-user";
     }
 
     @GetMapping("/users/edit/{id}")
@@ -83,7 +83,7 @@ public class AdminController {
         model.addAttribute("userDto", userDto);
         model.addAttribute("userId", id);
         model.addAttribute("availableRoles", availableRoles);
-        return "edit-user";
+        return "admin/edit-user";
     }
 
     @PostMapping("/users/update/{id}")
@@ -106,7 +106,7 @@ public class AdminController {
         if (result.hasErrors()) {
             model.addAttribute("userId", id);
             model.addAttribute("availableRoles", availableRoles);
-            return "edit-user";
+            return "admin/edit-user";
         }
 
         // Pastikan role di-handle dengan benar (perbaikan dari masalah sebelumnya)
