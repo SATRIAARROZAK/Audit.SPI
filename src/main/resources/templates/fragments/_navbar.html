@@ -12,7 +12,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/dashboard}">Dashboard</a>
+                        <!-- <a class="nav-link" th:href="@{/dashboard}">Dashboard</a> -->
                     </li>
                     <li class="nav-item dropdown" sec:authorize="hasAuthority('ADMIN')">
                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
@@ -22,7 +22,7 @@
                         <ul class="dropdown-menu" aria-labelledby="adminDropdown">
                             <!-- <li><a class="dropdown-item" th:href="@{/admin/users/add}">Tambah User Baru</a></li> -->
                             <li><a class="dropdown-item" th:href="@{/admin/users/list}">Daftar User</a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/surat-tugas/new}">Buat Surat Tugas</a></li>
+                            <!-- <li><a class="dropdown-item" th:href="@{/admin/surat-tugas/new}">Buat Surat Tugas</a></li> -->
                             <li><a class="dropdown-item" th:href="@{/admin/surat-tugas/list}">Daftar Surat Tugas</a>
                             </li>
                         </ul>

@@ -26,6 +26,11 @@ public class FileStorageService {
         }
     }
 
+    // TAMBAHKAN METODE INI
+    public Path getFileStorageLocation() {
+        return this.fileStorageLocation;
+    }
+
     public String storeFile(MultipartFile file) {
         if (file.isEmpty() || file.getOriginalFilename() == null) {
             return null;
@@ -62,10 +67,10 @@ public class FileStorageService {
         if (parts.length != 2) {
              throw new RuntimeException("Format data Base64 tidak valid.");
         }
-        
+
         String imageBase64 = parts[1];
         byte[] imageBytes = Base64.getDecoder().decode(imageBase64);
-        
+
         // Tentukan ekstensi file dari metadata
         String extension;
         if (parts[0].contains("image/jpeg")) {
