@@ -6,9 +6,12 @@ package Audit.Auditing;
 // import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing; // 1. IMPORT INI
+
 // import org.springframework.context.annotation.Bean;
 // import org.springframework.security.crypto.password.PasswordEncoder;
 
+@EnableJpaAuditing // 2. ANNOTASI INI UNTUK MENGAKTIFKAN AUDITING
 @SpringBootApplication
 public class AuditingSpiApplication {
 
