@@ -1,25 +1,33 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <body>
-<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-    <div class="container-fluid">
-        <a class="navbar-brand" th:href="@{/dashboard}">Aplikasi Auditing SPI</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/dashboard}">Dashboard</a>
-                </li>
-                <li class="nav-item dropdown" sec:authorize="hasAuthority('ADMIN')">
-                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Manajemen User
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                        <li><a class="dropdown-item" th:href="@{/admin/users/add}">Tambah User Baru</a></li>
-                        <li><a class="dropdown-item" th:href="@{/admin/users/list}">Daftar User</a></li>
-                    </ul>
+    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" th:href="@{/dashboard}">Aplikasi Auditing SPI</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/dashboard}">Dashboard</a>
+                    </li>
+                    <li class="nav-item dropdown" sec:authorize="hasAuthority('ADMIN')">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Manajemen User
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                            <!-- <li><a class="dropdown-item" th:href="@{/admin/users/add}">Tambah User Baru</a></li> -->
+                            <li><a class="dropdown-item" th:href="@{/admin/users/list}">Daftar User</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/surat-tugas/new}">Buat Surat Tugas</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/surat-tugas/list}">Daftar Surat Tugas</a>
+                            </li>
+                        </ul>
+
+                </ul>
                 </li>
                 <li class="nav-item" sec:authorize="hasAuthority('KEPALASPI')">
                     <a class="nav-link" th:href="@{/kepalaspi/laporan}">Laporan SPI</a>
@@ -30,34 +38,39 @@
                 <li class="nav-item" sec:authorize="hasAuthority('PEGAWAI')">
                     <a class="nav-link" th:href="@{/pegawai/tugas}">Lihat Tugas Saya</a>
                 </li>
-            </ul>
-            
-            <div class="dropdown">
-                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <img th:if="${#authentication.principal.user.photoPath}"
-                         th:src="@{'/profile-photos/' + ${#authentication.principal.user.photoPath}}"
-                         class="rounded-circle me-2" alt="Foto Profil" style="width: 40px; height: 40px; object-fit: cover;">
-                    
-                    <img th:unless="${#authentication.principal.user.photoPath}"
-                         th:src="@{https://via.placeholder.com/40}" 
-                         class="rounded-circle me-2" alt="Foto Profil">
-
-                    <span th:text="${#authentication.principal.user.fullName ?: #authentication.name}">Nama Pengguna</span>
-                </a>
-
-                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="userDropdown">
-                    <li><a class="dropdown-item" th:href="@{/profile/edit}">Edit Profil</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button type="submit" class="dropdown-item">Logout</button>
-                        </form>
-                    </li>
                 </ul>
-            </div>
 
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+                        id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img th:if="${#authentication.principal.user.photoPath}"
+                            th:src="@{'/profile-photos/' + ${#authentication.principal.user.photoPath}}"
+                            class="rounded-circle me-2" alt="Foto Profil"
+                            style="width: 40px; height: 40px; object-fit: cover;">
+
+                        <img th:unless="${#authentication.principal.user.photoPath}"
+                            th:src="@{https://via.placeholder.com/40}" class="rounded-circle me-2" alt="Foto Profil">
+
+                        <span th:text="${#authentication.principal.user.fullName ?: #authentication.name}">Nama
+                            Pengguna</span>
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" th:href="@{/profile/edit}">Edit Profil</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" class="d-inline">
+                                <button type="submit" class="dropdown-item">Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 </body>
+
 </html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/_header :: header('Buat Surat Tugas')}"></head>
+
+<body>
+    <div th:replace="~{fragments/_navbar :: navbar}"></div>
+
+    <main class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Form Surat Tugas Baru</h2>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/surat-tugas/save}" th:object="${suratTugasDTO}" method="post"
+                            enctype="multipart/form-data">
+                            
+                            <div class="mb-3">
+                                <label for="tujuan" class="form-label">Tujuan Audit:</label>
+                                <textarea id="tujuan" class="form-control" rows="3" th:field="*{tujuan}" required></textarea>
+                                <div th:if="${#fields.hasErrors('tujuan')}" th:errors="*{tujuan}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="suratFile" class="form-label">Upload File Surat (PDF/DOCX):</label>
+                                <input type="file" id="suratFile" class="form-control" th:field="*{suratFile}" required accept=".pdf,.doc,.docx" />
+                                <div th:if="${#fields.hasErrors('suratFile')}" th:errors="*{suratFile}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="ketuaTimId" class="form-label">Ketua Tim:</label>
+                                <select id="ketuaTimId" class="form-select" th:field="*{ketuaTimId}" required>
+                                    <option value="">Pilih Ketua Tim</option>
+                                    <option th:each="p : ${pegawai}" th:value="${p.id}" th:text="${p.fullName ?: p.username}"></option>
+                                </select>
+                                <div th:if="${#fields.hasErrors('ketuaTimId')}" th:errors="*{ketuaTimId}" class="text-danger small mt-1"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="anggotaTimIds" class="form-label">Anggota Tim (pilih satu atau lebih):</label>
+                                <select id="anggotaTimIds" class="form-select" th:field="*{anggotaTimIds}" multiple required size="5">
+                                     <option th:each="p : ${pegawai}" th:value="${p.id}" th:text="${p.fullName ?: p.username}"></option>
+                                </select>
+                                <div th:if="${#fields.hasErrors('anggotaTimIds')}" th:errors="*{anggotaTimIds}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success">Buat dan Kirim</button>
+                            <a th:href="@{/dashboard}" class="btn btn-secondary">Batal</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/_footer :: footer}"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ketuaSelect = document.getElementById('ketuaTimId');
+            const anggotaSelect = document.getElementById('anggotaTimIds');
+
+            function updateAnggotaOptions() {
+                const selectedKetuaId = ketuaSelect.value;
+                
+                // Iterasi melalui semua opsi di dropdown anggota
+                for (let option of anggotaSelect.options) {
+                    // Jika ID opsi sama dengan ID ketua yang dipilih, nonaktifkan dan hapus pilihan
+                    if (option.value === selectedKetuaId) {
+                        option.disabled = true;
+                        option.selected = false; // Hapus dari pilihan jika sudah terpilih
+                    } else {
+                        option.disabled = false;
+                    }
+                }
+            }
+
+            // Panggil fungsi saat pilihan ketua berubah
+            ketuaSelect.addEventListener('change', updateAnggotaOptions);
+
+            // Panggil juga saat halaman pertama kali dimuat (jika ada nilai awal)
+            updateAnggotaOptions();
+        });
+    </script>
+</body>
+</html>

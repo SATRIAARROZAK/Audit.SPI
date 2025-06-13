@@ -1,4 +1,4 @@
-package Audit.Auditing.controller;
+package Audit.Auditing.controller.admin;
 
 import Audit.Auditing.dto.UserDto;
 import Audit.Auditing.model.User;

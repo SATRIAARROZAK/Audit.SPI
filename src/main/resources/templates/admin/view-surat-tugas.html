@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/_header :: header('Detail Surat Tugas')}"></head>
+<body>
+<div th:replace="~{fragments/_navbar :: navbar}"></div>
+<main class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2>Detail Surat Tugas</h2>
+            <span class="badge bg-primary fs-6" th:text="${surat.status.displayName}"></span>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID Surat</dt>
+                <dd class="col-sm-9" th:text="${surat.id}"></dd>
+
+                <dt class="col-sm-3">Tujuan Audit</dt>
+                <dd class="col-sm-9"><p th:text="${surat.tujuan}"></p></dd>
+
+                <dt class="col-sm-3">Tanggal Dibuat</dt>
+                <dd class="col-sm-9" th:text="${#temporals.format(surat.createdAt, 'dd MMMM yyyy, HH:mm')}"></dd>
+                
+                <dt class="col-sm-3">File Surat</dt>
+                <dd class="col-sm-9"><a th:href="${fileUrl}" th:text="${surat.filePath}" target="_blank">Download/Lihat File</a></dd>
+
+                <hr class="my-3">
+
+                <dt class="col-sm-3">Ketua Tim</dt>
+                <dd class="col-sm-9" th:text="${surat.ketuaTim.fullName ?: surat.ketuaTim.username}"></dd>
+                
+                <dt class="col-sm-3">Anggota Tim</dt>
+                <dd class="col-sm-9">
+                    <ul>
+                        <li th:each="anggota : ${surat.anggotaTim}" th:text="${anggota.fullName ?: anggota.username}"></li>
+                    </ul>
+                </dd>
+            </dl>
+        </div>
+        <div class="card-footer">
+            <a th:href="@{/admin/surat-tugas/list}" class="btn btn-secondary">Kembali ke Daftar</a>
+            <a th:href="@{/admin/surat-tugas/edit/{id}(id=${surat.id})}" class="btn btn-warning">Edit Surat Ini</a>
+        </div>
+    </div>
+</main>
+<div th:replace="~{fragments/_footer :: footer}"></div>
+</body>
+</html>
