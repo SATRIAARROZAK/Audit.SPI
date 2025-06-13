@@ -32,7 +32,7 @@ public class SuratTugasController {
     @Autowired
     private SuratTugasService suratTugasService;
 
-     @GetMapping("/list")
+    @GetMapping("/list")
     public String listSuratTugas(Model model) {
         List<SuratTugas> listSurat = suratTugasService.getAllSuratTugas();
         model.addAttribute("listSurat", listSurat);
@@ -123,7 +123,8 @@ public class SuratTugasController {
             @Validated(SuratTugasDTO.Update.class) @ModelAttribute("suratTugasDTO") SuratTugasDTO suratTugasDTO,
             BindingResult result, Model model, RedirectAttributes ra) {
 
-        if (suratTugasDTO.getAnggotaTimIds().contains(suratTugasDTO.getKetuaTimId())) {
+        if (suratTugasDTO.getAnggotaTimIds() != null
+                && suratTugasDTO.getAnggotaTimIds().contains(suratTugasDTO.getKetuaTimId())) {
             result.rejectValue("anggotaTimIds", "error.anggotaTimIds",
                     "Ketua tim tidak boleh menjadi anggota tim juga.");
         }

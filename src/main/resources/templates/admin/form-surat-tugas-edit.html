@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head th:replace="~{fragments/_header :: header('Edit Surat Tugas')}"></head>
+
 <body>
     <div th:replace="~{fragments/_navbar :: navbar}"></div>
     <main class="container">
@@ -11,38 +13,49 @@
                         <h2>Form Edit Surat Tugas</h2>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{/admin/surat-tugas/update/{id}(id=${suratId})}" th:object="${suratTugasDTO}" method="post" enctype="multipart/form-data">
-                            
+                        <form th:action="@{/admin/surat-tugas/update/{id}(id=${suratId})}" th:object="${suratTugasDTO}"
+                            method="post" enctype="multipart/form-data">
+
                             <div class="mb-3">
                                 <label for="tujuan" class="form-label">Tujuan Audit:</label>
-                                <textarea id="tujuan" class="form-control" rows="3" th:field="*{tujuan}" required></textarea>
-                                <div th:if="${#fields.hasErrors('tujuan')}" th:errors="*{tujuan}" class="text-danger small mt-1"></div>
+                                <textarea id="tujuan" class="form-control" rows="3" th:field="*{tujuan}"
+                                    required></textarea>
+                                <div th:if="${#fields.hasErrors('tujuan')}" th:errors="*{tujuan}"
+                                    class="text-danger small mt-1"></div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="suratFile" class="form-label">Upload File Surat Baru (Opsional):</label>
-                                <input type="file" id="suratFile" class="form-control" th:field="*{suratFile}" accept=".pdf,.doc,.docx" />
-                                <small class="form-text text-muted">Kosongkan jika tidak ingin mengubah file surat.</small>
-                                <div th:if="${#fields.hasErrors('suratFile')}" th:errors="*{suratFile}" class="text-danger small mt-1"></div>
+                                <input type="file" id="suratFile" class="form-control" th:field="*{suratFile}"
+                                    accept=".pdf,.doc,.docx" />
+                                <small class="form-text text-muted">Kosongkan jika tidak ingin mengubah file
+                                    surat.</small>
+                                <div th:if="${#fields.hasErrors('suratFile')}" th:errors="*{suratFile}"
+                                    class="text-danger small mt-1"></div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="ketuaTimId" class="form-label">Ketua Tim:</label>
                                 <select id="ketuaTimId" class="form-select" th:field="*{ketuaTimId}" required>
                                     <option value="">Pilih Ketua Tim</option>
-                                    <option th:each="p : ${pegawai}" th:value="${p.id}" th:text="${p.fullName ?: p.username}" th:selected="${p.id == suratTugasDTO.ketuaTimId}"></option>
+                                    <option th:each="p : ${pegawai}" th:value="${p.id}"
+                                        th:text="${p.fullName ?: p.username}"
+                                        th:selected="${p.id == suratTugasDTO.ketuaTimId}"></option>
                                 </select>
-                                <div th:if="${#fields.hasErrors('ketuaTimId')}" th:errors="*{ketuaTimId}" class="text-danger small mt-1"></div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="anggotaTimIds" class="form-label">Anggota Tim:</label>
-                                <select id="anggotaTimIds" class="form-select" th:field="*{anggotaTimIds}" multiple required size="5">
-                                     <option th:each="p : ${pegawai}" th:value="${p.id}" th:text="${p.fullName ?: p.username}" th:selected="${suratTugasDTO.anggotaTimIds.contains(p.id)}"></option>
-                                </select>
-                                <div th:if="${#fields.hasErrors('anggotaTimIds')}" th:errors="*{anggotaTimIds}" class="text-danger small mt-1"></div>
+                                <div th:if="${#fields.hasErrors('ketuaTimId')}" th:errors="*{ketuaTimId}"
+                                    class="text-danger small mt-1"></div>
                             </div>
 
+                            <div class="mb-3">
+                                <label for="anggotaTimIds" class="form-label">Anggota Tim:</label>
+                                <select id="anggotaTimIds" th:field="*{anggotaTimIds}" multiple required>
+                                    <option th:each="p : ${pegawai}" th:value="${p.id}"
+                                        th:text="${p.fullName ?: p.username}"
+                                        th:selected="${suratTugasDTO.anggotaTimIds.contains(p.id)}"></option>
+                                </select>
+                                <div th:if="${#fields.hasErrors('anggotaTimIds')}" th:errors="*{anggotaTimIds}"
+                                    class="text-danger small mt-1"></div>
+                            </div>
                             <button type="submit" class="btn btn-success">Update Surat Tugas</button>
                             <a th:href="@{/admin/surat-tugas/list}" class="btn btn-secondary">Batal</a>
                         </form>
@@ -55,16 +68,19 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const ketuaSelect = document.getElementById('ketuaTimId');
-            const anggotaSelect = document.getElementById('anggotaTimIds');
+            
+            const tomSelect = new TomSelect('#anggotaTimIds', {
+                plugins: ['remove_button'],
+                create: false,
+                placeholder: 'Cari dan pilih anggota...',
+            });
+
             function updateAnggotaOptions() {
                 const selectedKetuaId = ketuaSelect.value;
-                for (let option of anggotaSelect.options) {
-                    if (option.value === selectedKetuaId) {
-                        option.disabled = true;
-                        option.selected = false;
-                    } else {
-                        option.disabled = false;
-                    }
+                Object.keys(tomSelect.options).forEach(key => tomSelect.enableOption(key));
+                if (selectedKetuaId) {
+                    tomSelect.removeItem(selectedKetuaId);
+                    tomSelect.disableOption(selectedKetuaId);
                 }
             }
             ketuaSelect.addEventListener('change', updateAnggotaOptions);
@@ -72,4 +88,5 @@
         });
     </script>
 </body>
+
 </html>
