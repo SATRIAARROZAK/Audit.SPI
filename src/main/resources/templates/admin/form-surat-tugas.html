@@ -59,27 +59,32 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const ketuaSelect = document.getElementById('ketuaTimId');
-            const anggotaSelect = document.getElementById('anggotaTimIds');
+            
+            // Inisialisasi Tom-select untuk anggota tim
+            const tomSelect = new TomSelect('#anggotaTimIds', {
+                plugins: ['remove_button'],
+                create: false,
+                placeholder: 'Cari dan pilih anggota...',
+            });
 
             function updateAnggotaOptions() {
                 const selectedKetuaId = ketuaSelect.value;
                 
-                // Iterasi melalui semua opsi di dropdown anggota
-                for (let option of anggotaSelect.options) {
-                    // Jika ID opsi sama dengan ID ketua yang dipilih, nonaktifkan dan hapus pilihan
-                    if (option.value === selectedKetuaId) {
-                        option.disabled = true;
-                        option.selected = false; // Hapus dari pilihan jika sudah terpilih
-                    } else {
-                        option.disabled = false;
-                    }
+                // Aktifkan semua opsi terlebih dahulu
+                Object.keys(tomSelect.options).forEach(key => tomSelect.enableOption(key));
+                
+                if (selectedKetuaId) {
+                    // Hapus ketua dari daftar pilihan anggota jika terpilih
+                    tomSelect.removeItem(selectedKetuaId);
+                    // Nonaktifkan opsi ketua di dropdown anggota
+                    tomSelect.disableOption(selectedKetuaId);
                 }
             }
 
             // Panggil fungsi saat pilihan ketua berubah
             ketuaSelect.addEventListener('change', updateAnggotaOptions);
 
-            // Panggil juga saat halaman pertama kali dimuat (jika ada nilai awal)
+            // Panggil juga saat halaman pertama kali dimuat
             updateAnggotaOptions();
         });
     </script>
