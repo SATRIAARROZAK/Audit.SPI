@@ -34,6 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/kepalaspi/**").hasAuthority("KEPALASPI")
                         // SEKRETARIS bisa akses dashboard dan fitur spesifiknya
                         .requestMatchers("/sekretaris/**").hasAuthority("SEKRETARIS")
+                          .requestMatchers("/sekretaris/surat-tugas/**").hasAuthority("SEKRETARIS")
                         // KARYAWAN bisa akses dashboard dan fitur spesifiknya
                         .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI")
                         .requestMatchers("/dashboard").hasAnyAuthority("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI")

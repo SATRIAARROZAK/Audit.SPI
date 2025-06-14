@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import java.nio.file.Files; // import ini
 import java.nio.file.Paths; // import ini
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -110,6 +111,29 @@ public class SuratTugasServiceImpl implements SuratTugasService {
 
         suratTugasRepository.save(suratTugas);
 
+    }
+
+    @Override
+    public List<SuratTugas> getSuratByStatus(StatusSuratTugas status) {
+        return suratTugasRepository.findByStatus(status, Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
+    @Override
+    @Transactional
+    public void reviewAndSetDates(Long suratId, LocalDate tanggalMulai, LocalDate tanggalSelesai) {
+        SuratTugas suratTugas = suratTugasRepository.findById(suratId)
+                .orElseThrow(() -> new EntityNotFoundException("Surat Tugas dengan ID " + suratId + " tidak ditemukan."));
+
+        // Validasi status sebelum diubah
+        if (suratTugas.getStatus() != StatusSuratTugas.BARU) {
+            throw new IllegalStateException("Hanya surat dengan status 'BARU' yang dapat direview.");
+        }
+        
+        suratTugas.setTanggalMulaiAudit(tanggalMulai);
+        suratTugas.setTanggalSelesaiAudit(tanggalSelesai);
+        suratTugas.setStatus(StatusSuratTugas.REVIEW_SEKRETARIS); // Status diubah
+
+        suratTugasRepository.save(suratTugas);
     }
 
     @Override
