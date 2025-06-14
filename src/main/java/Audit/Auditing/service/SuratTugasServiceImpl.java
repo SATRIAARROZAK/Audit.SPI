@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 import java.nio.file.Files; // import ini
 import java.nio.file.Paths; // import ini
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -32,8 +33,6 @@ public class SuratTugasServiceImpl implements SuratTugasService {
 
     @Autowired
     private FileStorageService fileStorageService;
-
-    
 
     @Override
     @Transactional
@@ -82,12 +81,13 @@ public class SuratTugasServiceImpl implements SuratTugasService {
                 .orElseThrow(() -> new EntityNotFoundException("Surat Tugas dengan ID " + id + " tidak ditemukan."));
 
         // Handle file update: hanya update jika file baru di-upload
-         // PERBAIKAN 1: Logika update file yang lebih aman
+        // PERBAIKAN 1: Logika update file yang lebih aman
         if (dto.getSuratFile() != null && !dto.getSuratFile().isEmpty()) {
             // Hanya hapus file lama jika path-nya ada (tidak null atau kosong)
             if (StringUtils.hasText(suratTugas.getFilePath())) {
                 try {
-                    Files.deleteIfExists(Paths.get(fileStorageService.getFileStorageLocation().toString(), suratTugas.getFilePath()));
+                    Files.deleteIfExists(Paths.get(fileStorageService.getFileStorageLocation().toString(),
+                            suratTugas.getFilePath()));
                 } catch (Exception e) {
                     System.err.println("Gagal menghapus file lama: " + e.getMessage());
                 }
@@ -122,16 +122,53 @@ public class SuratTugasServiceImpl implements SuratTugasService {
     @Transactional
     public void reviewAndSetDates(Long suratId, LocalDate tanggalMulai, LocalDate tanggalSelesai) {
         SuratTugas suratTugas = suratTugasRepository.findById(suratId)
-                .orElseThrow(() -> new EntityNotFoundException("Surat Tugas dengan ID " + suratId + " tidak ditemukan."));
+                .orElseThrow(
+                        () -> new EntityNotFoundException("Surat Tugas dengan ID " + suratId + " tidak ditemukan."));
 
         // Validasi status sebelum diubah
         if (suratTugas.getStatus() != StatusSuratTugas.BARU) {
             throw new IllegalStateException("Hanya surat dengan status 'BARU' yang dapat direview.");
         }
-        
+
         suratTugas.setTanggalMulaiAudit(tanggalMulai);
         suratTugas.setTanggalSelesaiAudit(tanggalSelesai);
         suratTugas.setStatus(StatusSuratTugas.REVIEW_SEKRETARIS); // Status diubah
+
+        suratTugasRepository.save(suratTugas);
+    }
+
+    @Override
+    @Transactional
+    public void approveSuratTugas(Long suratId, User approver) {
+        SuratTugas suratTugas = suratTugasRepository.findById(suratId)
+                .orElseThrow(() -> new EntityNotFoundException("Surat Tugas tidak ditemukan."));
+
+        if (suratTugas.getStatus() != StatusSuratTugas.REVIEW_SEKRETARIS) {
+            throw new IllegalStateException("Hanya surat yang sudah direview yang bisa disetujui.");
+        }
+
+        suratTugas.setStatus(StatusSuratTugas.DISETUJUI);
+        suratTugas.setApprover(approver);
+        suratTugas.setApprovalDate(LocalDateTime.now());
+        suratTugas.setCatatanPersetujuan("Disetujui.");
+
+        suratTugasRepository.save(suratTugas);
+    }
+
+    @Override
+    @Transactional
+    public void rejectSuratTugas(Long suratId, String catatan, User approver) {
+        SuratTugas suratTugas = suratTugasRepository.findById(suratId)
+                .orElseThrow(() -> new EntityNotFoundException("Surat Tugas tidak ditemukan."));
+
+        if (suratTugas.getStatus() != StatusSuratTugas.REVIEW_SEKRETARIS) {
+            throw new IllegalStateException("Hanya surat yang sudah direview yang bisa ditolak.");
+        }
+
+        suratTugas.setStatus(StatusSuratTugas.DITOLAK);
+        suratTugas.setApprover(approver);
+        suratTugas.setApprovalDate(LocalDateTime.now());
+        suratTugas.setCatatanPersetujuan(catatan);
 
         suratTugasRepository.save(suratTugas);
     }
@@ -144,20 +181,26 @@ public class SuratTugasServiceImpl implements SuratTugasService {
 
         // --- LOGIKA BARU ---
         // 1. Putuskan hubungan Many-to-Many dengan membersihkan list anggota
-        suratTugas.getAnggotaTim().clear();
-        suratTugasRepository.save(suratTugas); // Simpan perubahan untuk menghapus relasi di join table
+        if (suratTugas.getAnggotaTim() != null) {
+            suratTugas.getAnggotaTim().clear();
+            suratTugasRepository.save(suratTugas); // Simpan perubahan untuk menghapus relasi di join table
+        }
 
-        // 2. Hapus file dari storage
-        try {
-            // Pastikan Anda memiliki metode getFileStorageLocation() di FileStorageService
-            Files.deleteIfExists(
-                    Paths.get(fileStorageService.getFileStorageLocation().toString(), suratTugas.getFilePath()));
-        } catch (Exception e) {
-            System.err.println("Gagal menghapus file terkait: " + e.getMessage());
-            // Sebaiknya log error ini, tapi jangan hentikan proses penghapusan data
+        // 2. Hapus file dari storage jika ada
+        String filePath = suratTugas.getFilePath();
+        if (StringUtils.hasText(filePath)) {
+            try {
+                java.nio.file.Path fullPath = Paths.get(fileStorageService.getFileStorageLocation().toString(), filePath);
+                if (Files.exists(fullPath)) {
+                    Files.delete(fullPath);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Gagal menghapus file: " + filePath, e);
+            }
         }
 
         // 3. Hapus entitas utama setelah relasi dibersihkan
         suratTugasRepository.deleteById(id);
     }
+
 }

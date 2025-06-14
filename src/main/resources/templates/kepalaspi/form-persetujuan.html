@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/_header :: header('Proses Persetujuan Surat Tugas')}"></head>
+<body>
+<div th:replace="~{fragments/_navbar :: navbar}"></div>
+<main class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2>Proses Persetujuan Surat Tugas</h2>
+            <span class="badge bg-warning text-dark fs-6" th:text="${surat.status.displayName}"></span>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Tujuan Audit:</dt>
+                <dd class="col-sm-9" th:text="${surat.tujuan}"></dd>
+                <dt class="col-sm-3">Jadwal Audit:</dt>
+                <dd class="col-sm-9" th:text="${#temporals.format(surat.tanggalMulaiAudit, 'dd MMMM yyyy')} + ' s/d ' + ${#temporals.format(surat.tanggalSelesaiAudit, 'dd MMMM yyyy')}"></dd>
+                <dt class="col-sm-3">Tim Audit:</dt>
+                <dd class="col-sm-9">
+                    <b>Ketua:</b> <span th:text="${surat.ketuaTim.fullName ?: surat.ketuaTim.username}"></span>
+                    <br><b>Anggota:</b>
+                    <ul><li th:each="a : ${surat.anggotaTim}" th:text="${a.fullName ?: a.username}"></li></ul>
+                </dd>
+            </dl>
+            <hr>
+            <h4>Tindakan Persetujuan</h4>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+            <p>Anda login sebagai: <b sec:authentication="principal.user.fullName"></b> (<span sec:authentication="principal.authorities"></span>)</p>
+
+            <div class="d-flex gap-3">
+                <form th:action="@{/kepalaspi/surat-tugas/approve}" method="post" class="d-inline">
+                    <input type="hidden" name="suratId" th:value="${surat.id}" />
+                    <button type="submit" class="btn btn-success" onclick="return confirm('Apakah Anda yakin ingin MENYETUJUI surat tugas ini?');">Setujui Surat Tugas</button>
+                </form>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                  Tolak Surat Tugas
+                </button>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a th:href="@{/kepalaspi/surat-tugas/list}" class="btn btn-secondary">Kembali ke Daftar</a>
+        </div>
+    </div>
+
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/kepalaspi/surat-tugas/reject}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="rejectModalLabel">Form Penolakan Surat Tugas</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="suratId" th:value="${surat.id}" />
+                        <div class="mb-3">
+                            <label for="catatanPersetujuan" class="form-label">Alasan Penolakan (Wajib Diisi):</label>
+                            <textarea class="form-control" id="catatanPersetujuan" name="catatanPersetujuan" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Kirim Penolakan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="~{fragments/_footer :: footer}"></div>
+</body>
+</html>

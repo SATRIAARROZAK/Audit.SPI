@@ -34,12 +34,17 @@ public class SuratTugas {
     private User ketuaTim;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "surat_tugas_anggota",
-        joinColumns = @JoinColumn(name = "surat_tugas_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<User> anggotaTim;
+    @JoinTable(name = "surat_tugas_anggota", joinColumns = @JoinColumn(name = "surat_tugas_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approver_id")
+    private User approver; // User yang menyetujui/menolak (Kepala SPI atau Sekretaris)
+
+    @Column(name = "approval_date")
+    private LocalDateTime approvalDate;
+
+    @Column(columnDefinition = "TEXT")
+    private String catatanPersetujuan; // Untuk catatan/alasan penolakan
 
     @Column(name = "tanggal_mulai_audit")
     private LocalDate tanggalMulaiAudit;
