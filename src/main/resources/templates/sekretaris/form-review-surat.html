@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/_header :: header('Review Surat Tugas')}"></head>
+<body>
+<div th:replace="~{fragments/_navbar :: navbar}"></div>
+<main class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Review Surat Tugas & Penjadwalan Audit</h2>
+                </div>
+                <div class="card-body">
+                    <h4>Informasi Surat</h4>
+                    <dl class="row">
+                        <dt class="col-sm-3">Tujuan Audit:</dt>
+                        <dd class="col-sm-9" th:text="${surat.tujuan}"></dd>
+                        <dt class="col-sm-3">Ketua Tim:</dt>
+                        <dd class="col-sm-9" th:text="${surat.ketuaTim.fullName ?: surat.ketuaTim.username}"></dd>
+                        <dt class="col-sm-3">Anggota Tim:</dt>
+                        <dd class="col-sm-9">
+                            <ul><li th:each="a : ${surat.anggotaTim}" th:text="${a.fullName ?: a.username}"></li></ul>
+                        </dd>
+                    </dl>
+                    <hr>
+                    <h4>Form Penjadwalan</h4>
+                    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+                    <form th:action="@{/sekretaris/surat-tugas/submit-review}" method="post">
+                        <input type="hidden" name="suratId" th:value="${surat.id}" />
+                        <div class="mb-3">
+                            <label for="tanggalMulaiAudit" class="form-label">Tanggal Mulai Audit:</label>
+                            <input type="date" class="form-control" id="tanggalMulaiAudit" name="tanggalMulaiAudit" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tanggalSelesaiAudit" class="form-label">Tanggal Selesai Audit:</label>
+                            <input type="date" class="form-control" id="tanggalSelesaiAudit" name="tanggalSelesaiAudit" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Kirim ke Kepala SPI</button>
+                        <a th:href="@{/sekretaris/surat-tugas/list}" class="btn btn-secondary">Batal</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="~{fragments/_footer :: footer}"></div>
+</body>
+</html>
