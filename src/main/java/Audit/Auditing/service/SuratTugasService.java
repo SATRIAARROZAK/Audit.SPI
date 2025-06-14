@@ -3,6 +3,7 @@ package Audit.Auditing.service;
 import Audit.Auditing.dto.SuratTugasDTO;
 import Audit.Auditing.model.StatusSuratTugas;
 import Audit.Auditing.model.SuratTugas; // Import ini
+import Audit.Auditing.model.User;
 
 import java.time.LocalDate;
 import java.util.List; // Import ini
@@ -23,4 +24,7 @@ public interface SuratTugasService {
     List<SuratTugas> getSuratByStatus(StatusSuratTugas status);
 
     void reviewAndSetDates(Long suratId, LocalDate tanggalMulai, LocalDate tanggalSelesai);
+
+    void approveSuratTugas(Long suratId, User approver);
+    void rejectSuratTugas(Long suratId, String catatan, User approver);
 }

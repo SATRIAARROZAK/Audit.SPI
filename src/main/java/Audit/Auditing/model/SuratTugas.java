@@ -47,6 +47,17 @@ public class SuratTugas {
     @Column(name = "tanggal_selesai_audit")
     private LocalDate tanggalSelesaiAudit;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approver_id")
+    private User approver; // User yang menyetujui/menolak (Kepala SPI atau Sekretaris)
+
+    @Column(name = "approval_date")
+    private LocalDateTime approvalDate;
+
+    @Column(columnDefinition = "TEXT")
+    private String catatanPersetujuan;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

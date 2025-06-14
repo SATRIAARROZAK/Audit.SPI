@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 import java.nio.file.Files; // import ini
 import java.nio.file.Paths; // import ini
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -132,6 +133,43 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugas.setTanggalMulaiAudit(tanggalMulai);
         suratTugas.setTanggalSelesaiAudit(tanggalSelesai);
         suratTugas.setStatus(StatusSuratTugas.REVIEW_SEKRETARIS); // Status diubah
+
+        suratTugasRepository.save(suratTugas);
+    }
+
+
+    @Override
+    @Transactional
+    public void approveSuratTugas(Long suratId, User approver) {
+        SuratTugas suratTugas = suratTugasRepository.findById(suratId)
+                .orElseThrow(() -> new EntityNotFoundException("Surat Tugas tidak ditemukan."));
+
+        if (suratTugas.getStatus() != StatusSuratTugas.REVIEW_SEKRETARIS) {
+            throw new IllegalStateException("Hanya surat yang sudah direview yang bisa disetujui.");
+        }
+
+        suratTugas.setStatus(StatusSuratTugas.DISETUJUI);
+        suratTugas.setApprover(approver);
+        suratTugas.setApprovalDate(LocalDateTime.now());
+        suratTugas.setCatatanPersetujuan("Disetujui.");
+
+        suratTugasRepository.save(suratTugas);
+    }
+
+    @Override
+    @Transactional
+    public void rejectSuratTugas(Long suratId, String catatan, User approver) {
+        SuratTugas suratTugas = suratTugasRepository.findById(suratId)
+                .orElseThrow(() -> new EntityNotFoundException("Surat Tugas tidak ditemukan."));
+
+        if (suratTugas.getStatus() != StatusSuratTugas.REVIEW_SEKRETARIS) {
+            throw new IllegalStateException("Hanya surat yang sudah direview yang bisa ditolak.");
+        }
+
+        suratTugas.setStatus(StatusSuratTugas.DITOLAK);
+        suratTugas.setApprover(approver);
+        suratTugas.setApprovalDate(LocalDateTime.now());
+        suratTugas.setCatatanPersetujuan(catatan);
 
         suratTugasRepository.save(suratTugas);
     }

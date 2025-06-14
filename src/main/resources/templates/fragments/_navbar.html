@@ -28,19 +28,28 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown" sec:authorize="hasAuthority('SEKRETARIS')">
-                    <a class="nav-link dropdown-toggle" href="#" id="sekretarisDropdown" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        Surat Tugas
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="sekretarisDropdown">
-                        <li><a class="dropdown-item" th:href="@{/sekretaris/surat-tugas/list}">Review Surat Masuk</a>
-                        </li>
-                    </ul>
-                </li>
+                        <a class="nav-link dropdown-toggle" href="#" id="sekretarisDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Surat Tugas
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="sekretarisDropdown">
+                            <li><a class="dropdown-item" th:href="@{/sekretaris/surat-tugas/list}">Review Surat Masuk</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('KEPALASPI', 'SEKRETARIS')">
+                        <a class="nav-link dropdown-toggle" href="#" id="kepalaSpiDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Persetujuan
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="kepalaSpiDropdown">
+                            <li><a class="dropdown-item" th:href="@{/kepalaspi/surat-tugas/list}">Persetujuan Surat Tugas</a></li>
+                        </ul>
+                    </li>
 
                 </ul>
-            
-                
+
+
 
                 </ul>
 
