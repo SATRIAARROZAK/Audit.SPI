@@ -39,14 +39,14 @@
                                     </a>
 
                                     <a th:href="@{/admin/surat-tugas/edit/{id}(id=${surat.id})}"
-                                        class="btn btn-warning btn-sm" title="Edit Surat">
-                                        <i class="fas fa-edit"></i>
+                                        class="btn btn-outline-warning" title="Edit Surat">
+                                        <i class="bi bi-pencil-square"></i>
                                     </a>
 
                                     <a th:href="@{/admin/surat-tugas/delete/{id}(id=${surat.id})}"
-                                        class="btn btn-danger btn-sm" title="Hapus Surat"
+                                        class="btn btn-outline-danger" title="Hapus Surat"
                                         onclick="return confirm('Apakah Anda yakin ingin menghapus surat tugas ini?');">
-                                        <i class="fas fa-trash-alt"></i>
+                                        <i class="bi bi-trash3-fill"></i>
                                     </a>
                                 </td>
                             </tr>
