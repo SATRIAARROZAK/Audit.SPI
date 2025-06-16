@@ -1,9 +1,17 @@
 package Audit.Auditing.service;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,7 +34,6 @@ public class FileStorageService {
         }
     }
 
-    // TAMBAHKAN METODE INI
     public Path getFileStorageLocation() {
         return this.fileStorageLocation;
     }
@@ -62,7 +69,6 @@ public class FileStorageService {
             return null;
         }
 
-        // Format data URL: data:image/png;base64,iVBORw0KGgo...
         String[] parts = base64Data.split(",");
         if (parts.length != 2) {
              throw new RuntimeException("Format data Base64 tidak valid.");
@@ -71,7 +77,6 @@ public class FileStorageService {
         String imageBase64 = parts[1];
         byte[] imageBytes = Base64.getDecoder().decode(imageBase64);
 
-        // Tentukan ekstensi file dari metadata
         String extension;
         if (parts[0].contains("image/jpeg")) {
             extension = ".jpg";
@@ -89,6 +94,40 @@ public class FileStorageService {
             return fileName;
         } catch (IOException ex) {
             throw new RuntimeException("Gagal menyimpan file dari Base64 " + fileName, ex);
+        }
+    }
+
+    /**
+     * Mengonversi halaman tertentu dari file PDF menjadi gambar PNG.
+     * @param fileName Nama file PDF yang akan dikonversi.
+     * @param pageNumber Nomor halaman yang akan diambil (dimulai dari 0).
+     * @return Array byte dari gambar PNG.
+     * @throws IOException Jika file tidak ditemukan atau gagal dibaca/dikonversi.
+     */
+    public byte[] convertPdfPageToImage(String fileName, int pageNumber) throws IOException {
+        Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+        File file = filePath.toFile();
+
+        if (!file.exists()) {
+            throw new FileNotFoundException("File tidak ditemukan: " + fileName);
+        }
+
+        try (PDDocument document = PDDocument.load(file)) {
+            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            
+            // Pastikan nomor halaman valid
+            if (pageNumber < 0 || pageNumber >= document.getNumberOfPages()) {
+                throw new IllegalArgumentException("Nomor halaman tidak valid: " + pageNumber);
+            }
+            
+            // Render halaman PDF menjadi gambar dengan resolusi 150 DPI
+            BufferedImage bim = pdfRenderer.renderImageWithDPI(pageNumber, 150, ImageType.RGB);
+
+            // Tulis gambar ke output stream dalam format PNG
+            try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                ImageIO.write(bim, "png", baos);
+                return baos.toByteArray();
+            }
         }
     }
 }

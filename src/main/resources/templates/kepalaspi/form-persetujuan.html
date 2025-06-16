@@ -1,71 +1,131 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head th:replace="~{fragments/_header :: header('Proses Persetujuan Surat Tugas')}"></head>
+
 <body>
-<div th:replace="~{fragments/_navbar :: navbar}"></div>
-<main class="container">
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h2>Proses Persetujuan Surat Tugas</h2>
-            <span class="badge bg-warning text-dark fs-6" th:text="${surat.status.displayName}"></span>
-        </div>
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">Tujuan Audit:</dt>
-                <dd class="col-sm-9" th:text="${surat.tujuan}"></dd>
-                <dt class="col-sm-3">Jadwal Audit:</dt>
-                <dd class="col-sm-9" th:text="${#temporals.format(surat.tanggalMulaiAudit, 'dd MMMM yyyy')} + ' s/d ' + ${#temporals.format(surat.tanggalSelesaiAudit, 'dd MMMM yyyy')}"></dd>
-                <dt class="col-sm-3">Tim Audit:</dt>
-                <dd class="col-sm-9">
-                    <b>Ketua:</b> <span th:text="${surat.ketuaTim.fullName ?: surat.ketuaTim.username}"></span>
-                    <br><b>Anggota:</b>
-                    <ul><li th:each="a : ${surat.anggotaTim}" th:text="${a.fullName ?: a.username}"></li></ul>
-                </dd>
-            </dl>
-            <hr>
-            <h4>Tindakan Persetujuan</h4>
-            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
-            <p>Anda login sebagai: <b sec:authentication="principal.user.fullName"></b> (<span sec:authentication="principal.authorities"></span>)</p>
+    <div th:replace="~{fragments/_navbar :: navbar}"></div>
+    <main class="container">
+        <div class="row">
 
-            <div class="d-flex gap-3">
-                <form th:action="@{/kepalaspi/surat-tugas/approve}" method="post" class="d-inline">
-                    <input type="hidden" name="suratId" th:value="${surat.id}" />
-                    <button type="submit" class="btn btn-success" onclick="return confirm('Apakah Anda yakin ingin MENYETUJUI surat tugas ini?');">Setujui Surat Tugas</button>
-                </form>
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                  Tolak Surat Tugas
-                </button>
-            </div>
-        </div>
-        <div class="card-footer">
-            <a th:href="@{/kepalaspi/surat-tugas/list}" class="btn btn-secondary">Kembali ke Daftar</a>
-        </div>
-    </div>
-
-    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form th:action="@{/kepalaspi/surat-tugas/reject}" method="post">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="rejectModalLabel">Form Penolakan Surat Tugas</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2>Surat Tugas</h2>
+                        <span class="badge bg-primary text-ligh fs-6" th:text="${surat.status.displayName}"></span>
                     </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="suratId" th:value="${surat.id}" />
-                        <div class="mb-3">
-                            <label for="catatanPersetujuan" class="form-label">Alasan Penolakan (Wajib Diisi):</label>
-                            <textarea class="form-control" id="catatanPersetujuan" name="catatanPersetujuan" rows="3" required></textarea>
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 25%;">Tujuan Audit</th>
+                                    <td th:text="${surat.tujuan}"></td>
+                                </tr>
+                                <tr>
+                                    <th>Jadwal Audit</th>
+                                    <td
+                                        th:text="${#temporals.format(surat.tanggalMulaiAudit, 'dd MMMM yyyy')} + ' s/d ' + ${#temporals.format(surat.tanggalSelesaiAudit, 'dd MMMM yyyy')}">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Ketua Tim</th>
+                                    <td th:text="${surat.ketuaTim.fullName ?: surat.ketuaTim.username}"></td>
+                                </tr>
+                                <tr>
+                                    <th>Anggota Tim</th>
+                                    <td>
+                                        <ol class="mb-0 ps-3">
+                                            <li th:each="a : ${surat.anggotaTim}" th:text="${a.fullName ?: a.username}">
+                                            </li>
+                                        </ol>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <hr>
+                        <h4>Tindakan Persetujuan</h4>
+                        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+                        <p>Anda login sebagai: <b sec:authentication="principal.user.fullName"></b> (<span
+                                sec:authentication="principal.authorities"></span>)</p>
+
+                        <div class="d-flex gap-3">
+                            <form th:action="@{/kepalaspi/surat-tugas/approve}" method="post" class="d-inline">
+                                <input type="hidden" name="suratId" th:value="${surat.id}" />
+                                <button type="submit" class="btn btn-success"
+                                    onclick="return confirm('Apakah Anda yakin ingin MENYETUJUI surat tugas ini?');">Setujui
+                                    Surat Tugas</button>
+                            </form>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                data-bs-target="#rejectModal">
+                                Tolak Surat Tugas
+                            </button>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-danger">Kirim Penolakan</button>
+                    <div class="card-footer">
+                        <a th:href="@{/kepalaspi/surat-tugas/list}" class="btn btn-warning">Batal</a>
                     </div>
-                </form>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Pratinjau File Surat</h4>
+                    </div>
+                    <div class="card-body" style="height: 100vh;">
+                        <th:block th:if="${isPdf}">
+                            <div th:if="${isPdf}">
+                                <img th:src="@{/pdf/preview/{fileName}(fileName=${surat.filePath})}" class="img-fluid"
+                                    alt="Preview Halaman 1" />
+                            </div>
+                            <div th:unless="${isPdf}">
+                                <img th:src="@{${fileUrl}}" class="img-fluid" alt="Preview File" />
+                            </div>
+                        </th:block>
+                        <th:block th:unless="${isPdf}">
+                            <div
+                                class="text-center p-5 d-flex flex-column justify-content-center align-items-center h-100">
+                                <i class="fas fa-file-word fa-5x text-primary mb-3"></i>
+                                <h5 class="mt-3">Pratinjau tidak tersedia</h5>
+                                <p class="text-muted">Tipe file ini tidak didukung untuk pratinjau langsung.</p>
+                                <a th:href="@{${fileUrl}}" class="btn btn-primary mt-3" target="_blank" download>
+                                    <i class="fas fa-download me-2"></i> Unduh File
+                                </a>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</main>
-<div th:replace="~{fragments/_footer :: footer}"></div>
+
+        <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form th:action="@{/kepalaspi/surat-tugas/reject}" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="rejectModalLabel">Form Penolakan Surat Tugas</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="suratId" th:value="${surat.id}" />
+                            <div class="mb-3">
+                                <label for="catatanPersetujuan" class="form-label">Alasan Penolakan (Wajib
+                                    Diisi):</label>
+                                <textarea class="form-control" id="catatanPersetujuan" name="catatanPersetujuan"
+                                    rows="3" required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger">Kirim Penolakan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+    <div th:replace="~{fragments/_footer :: footer}"></div>
 </body>
+
 </html>

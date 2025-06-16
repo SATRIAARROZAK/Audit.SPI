@@ -1,48 +1,92 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head th:replace="~{fragments/_header :: header('Review Surat Tugas')}"></head>
+
 <body>
-<div th:replace="~{fragments/_navbar :: navbar}"></div>
-<main class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-9">
-            <div class="card">
-                <div class="card-header">
-                    <h2>Review Surat Tugas & Penjadwalan Audit</h2>
-                </div>
-                <div class="card-body">
-                    <h4>Informasi Surat</h4>
-                    <dl class="row">
-                        <dt class="col-sm-3">Tujuan Audit:</dt>
-                        <dd class="col-sm-9" th:text="${surat.tujuan}"></dd>
-                        <dt class="col-sm-3">Ketua Tim:</dt>
-                        <dd class="col-sm-9" th:text="${surat.ketuaTim.fullName ?: surat.ketuaTim.username}"></dd>
-                        <dt class="col-sm-3">Anggota Tim:</dt>
-                        <dd class="col-sm-9">
-                            <ul><li th:each="a : ${surat.anggotaTim}" th:text="${a.fullName ?: a.username}"></li></ul>
-                        </dd>
-                    </dl>
-                    <hr>
-                    <h4>Form Penjadwalan</h4>
-                    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
-                    <form th:action="@{/sekretaris/surat-tugas/submit-review}" method="post">
-                        <input type="hidden" name="suratId" th:value="${surat.id}" />
-                        <div class="mb-3">
-                            <label for="tanggalMulaiAudit" class="form-label">Tanggal Mulai Audit:</label>
-                            <input type="date" class="form-control" id="tanggalMulaiAudit" name="tanggalMulaiAudit" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="tanggalSelesaiAudit" class="form-label">Tanggal Selesai Audit:</label>
-                            <input type="date" class="form-control" id="tanggalSelesaiAudit" name="tanggalSelesaiAudit" required>
-                        </div>
-                        <button type="submit" class="btn btn-success">Kirim ke Kepala SPI</button>
-                        <a th:href="@{/sekretaris/surat-tugas/list}" class="btn btn-secondary">Batal</a>
-                    </form>
+    <div th:replace="~{fragments/_navbar :: navbar}"></div>
+    <main class="container">
+        <div class="row">
+
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Review Surat Tugas & Penjadwalan Audit</h2>
+                    </div>
+                    <div class="card-body">
+                        <h4>Informasi Surat</h4>
+                        <table class="table table-bordered table-striped">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 25%;">Tujuan Audit</th>
+                                    <td th:text="${surat.tujuan}"></td>
+                                </tr>
+                                <tr>
+                                    <th>Ketua Tim</th>
+                                    <td th:text="${surat.ketuaTim.fullName ?: surat.ketuaTim.username}"></td>
+                                </tr>
+                                <tr>
+                                    <th>Anggota Tim</th>
+                                    <td>
+                                        <ol class="mb-0 ps-3">
+                                            <li th:each="a : ${surat.anggotaTim}" th:text="${a.fullName ?: a.username}"></li>
+                                        </ol>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <hr>
+                        <h4>Form Penjadwalan</h4>
+                        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+                        <form th:action="@{/sekretaris/surat-tugas/submit-review}" method="post">
+                            <input type="hidden" name="suratId" th:value="${surat.id}" />
+                            <div class="mb-3">
+                                <label for="tanggalMulaiAudit" class="form-label">Tanggal Mulai Audit:</label>
+                                <input type="date" class="form-control" id="tanggalMulaiAudit" name="tanggalMulaiAudit" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tanggalSelesaiAudit" class="form-label">Tanggal Selesai Audit:</label>
+                                <input type="date" class="form-control" id="tanggalSelesaiAudit" name="tanggalSelesaiAudit" required>
+                            </div>
+                            <button type="submit" class="btn btn-success">Kirim ke Kepala SPI</button>
+                            <a th:href="@{/sekretaris/surat-tugas/list}" class="btn btn-secondary">Batal</a>
+                        </form>
+                    </div>
                 </div>
             </div>
+
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Pratinjau File Surat</h4>
+                    </div>
+                    <div class="card-body" style="height: 100vh;">
+                        <th:block th:if="${isPdf}">
+                            <div th:if="${isPdf}">
+                        <img th:src="@{/pdf/preview/{fileName}(fileName=${surat.filePath})}" class="img-fluid"
+                            alt="Preview Halaman 1" />
+                    </div>
+                    <div th:unless="${isPdf}">
+                        <img th:src="@{${fileUrl}}" class="img-fluid" alt="Preview File" />
+                    </div>
+                        </th:block>
+                        <th:block th:unless="${isPdf}">
+                            <div class="text-center p-5 d-flex flex-column justify-content-center align-items-center h-100">
+                                <i class="fas fa-file-word fa-5x text-primary mb-3"></i>
+                                <h5 class="mt-3">Pratinjau tidak tersedia</h5>
+                                <p class="text-muted">Tipe file ini tidak didukung untuk pratinjau langsung.</p>
+                                <a th:href="@{${fileUrl}}" class="btn btn-primary mt-3" target="_blank" download>
+                                    <i class="fas fa-download me-2"></i> Unduh File
+                                </a>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+
         </div>
-    </div>
-</main>
-<div th:replace="~{fragments/_footer :: footer}"></div>
+    </main>
+    <div th:replace="~{fragments/_footer :: footer}"></div>
 </body>
+
 </html>

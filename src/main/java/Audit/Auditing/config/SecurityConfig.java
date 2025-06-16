@@ -29,7 +29,7 @@ public class SecurityConfig {
                                                 // Izinkan akses ke URL publik
                                                 .requestMatchers("/login", "/register", "/css/**", "/js/**", "/error",
                                                                 "/profile/edit", "/profile/update",
-                                                                "/profile-photos/**")
+                                                                "/profile-photos/**", "/pdf/**") // <-- TAMBAHKAN INI
                                                 .permitAll()
                                                 // Aturan untuk role spesifik
                                                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
