@@ -26,27 +26,17 @@ public class SecurityConfig {
                 http
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                                                // Izinkan akses ke URL profil dan foto
+                                                // Izinkan akses ke URL publik
                                                 .requestMatchers("/login", "/register", "/css/**", "/js/**", "/error",
                                                                 "/profile/edit", "/profile/update",
                                                                 "/profile-photos/**")
                                                 .permitAll()
-                                                // Hanya ADMIN yang bisa akses halaman /admin/**
-                                                .requestMatchers("/admin/**").hasAuthority("ADMIN") // FIX: Simplified
-                                                                                                    // and corrected
-                                                                                                    // rule
-                                                // KEPALASPI bisa akses dashboard dan fitur spesifiknya
-                                                .requestMatchers("/kepalaspi/**").hasAuthority("KEPALASPI")
-                                                .requestMatchers("/kepalaspi/**")
-                                                .hasAnyAuthority("KEPALASPI", "SEKRETARIS") // Beri akses ke KEPALASPI
-                                                                                            // dan SEKRETARIS
-
-                                                .requestMatchers("/kepalaspi/**").hasAnyAuthority("KEPALASPI", "SEKRETARIS")                                        
-                                                // SEKRETARIS bisa akses dashboard dan fitur spesifiknya
+                                                // Aturan untuk role spesifik
+                                                .requestMatchers("/admin/**").hasAuthority("ADMIN")
+                                                // PERUBAHAN: Berikan akses ke SEKRETARIS dan KEPALASPI untuk fitur persetujuan
+                                                .requestMatchers("/kepalaspi/**").hasAnyAuthority("KEPALASPI", "SEKRETARIS")
+                                                // SEKRETARIS tetap punya akses ke fitur review-nya
                                                 .requestMatchers("/sekretaris/**").hasAuthority("SEKRETARIS")
-                                                .requestMatchers("/sekretaris/surat-tugas/**")
-                                                .hasAuthority("SEKRETARIS")
-                                                // KARYAWAN bisa akses dashboard dan fitur spesifiknya
                                                 .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI")
                                                 .requestMatchers("/dashboard")
                                                 .hasAnyAuthority("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI")
@@ -54,7 +44,6 @@ public class SecurityConfig {
                                 .formLogin(formLogin -> formLogin
                                                 .loginPage("/login")
                                                 .loginProcessingUrl("/perform_login")
-                                                // Gunakan custom success handler
                                                 .successHandler(authenticationSuccessHandler)
                                                 .failureUrl("/login?error=true")
                                                 .permitAll())
