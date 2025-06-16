@@ -3,8 +3,10 @@ package Audit.Auditing.controller.admin;
 import Audit.Auditing.dto.SuratTugasDTO;
 import Audit.Auditing.model.Role;
 import Audit.Auditing.model.SuratTugas;
+import Audit.Auditing.model.SuratTugasHistory;
 import Audit.Auditing.model.User;
 import Audit.Auditing.repository.UserRepository;
+import Audit.Auditing.repository.SuratTugasHistoryRepository;
 import Audit.Auditing.service.SuratTugasService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -28,9 +30,11 @@ public class SuratTugasController {
 
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private SuratTugasService suratTugasService;
+
+    @Autowired
+    private SuratTugasHistoryRepository suratTugasHistoryRepository;
 
     @GetMapping("/list")
     public String listSuratTugas(Model model) {
@@ -86,10 +90,18 @@ public class SuratTugasController {
             ra.addFlashAttribute("errorMessage", "Surat tugas tidak ditemukan.");
             return "redirect:/admin/surat-tugas/list";
         }
-        model.addAttribute("surat", suratOpt.get());
-        // Arahkan ke file yang ada di direktori upload. Pastikan WebConfig sudah
-        // tersetting.
-        model.addAttribute("fileUrl", "/profile-photos/" + suratOpt.get().getFilePath());
+        SuratTugas surat = suratOpt.get();
+        List<SuratTugasHistory> history = suratTugasHistoryRepository.findBySuratTugasIdOrderByTimestampAsc(id);
+        String filePath = surat.getFilePath();
+
+        // --- TAMBAHKAN LOGIKA INI ---
+        boolean isPdf = filePath != null && filePath.toLowerCase().endsWith(".pdf");
+        
+        model.addAttribute("surat", surat);
+        model.addAttribute("history", history);
+        model.addAttribute("fileUrl", "/profile-photos/" + filePath);
+        model.addAttribute("isPdf", isPdf); // Kirim flag isPdf ke view
+        
         return "admin/view-surat-tugas";
     }
 

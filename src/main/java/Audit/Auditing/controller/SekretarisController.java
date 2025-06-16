@@ -38,7 +38,15 @@ public class SekretarisController {
             ra.addFlashAttribute("errorMessage", "Surat tugas tidak valid atau tidak dalam status yang benar untuk direview.");
             return "redirect:/sekretaris/surat-tugas/list";
         }
+        SuratTugas surat = suratOpt.get();
+        String filePath = surat.getFilePath();
+        
         model.addAttribute("surat", suratOpt.get());
+          boolean isPdf = filePath != null && filePath.toLowerCase().endsWith(".pdf");
+
+        model.addAttribute("surat", surat);
+        model.addAttribute("fileUrl", "/profile-photos/" + filePath);
+        model.addAttribute("isPdf", isPdf); // Kirim flag isPdf ke view
         return "sekretaris/form-review-surat";
     }
 

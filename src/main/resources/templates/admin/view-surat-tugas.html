@@ -4,41 +4,86 @@
 <body>
 <div th:replace="~{fragments/_navbar :: navbar}"></div>
 <main class="container">
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h2>Detail Surat Tugas</h2>
-            <span class="badge bg-primary fs-6" th:text="${surat.status.displayName}"></span>
-        </div>
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">ID Surat</dt>
-                <dd class="col-sm-9" th:text="${surat.id}"></dd>
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2>Detail Surat Tugas</h2>
+                    <span class="badge bg-primary fs-6" th:text="${surat.status.displayName}"></span>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width: 30%;">ID Surat</th>
+                                <td th:text="${surat.id}"></td>
+                            </tr>
+                            <tr>
+                                <th>Tujuan Audit</th>
+                                <td th:text="${surat.tujuan}"></td>
+                            </tr>
+                            <tr>
+                                <th>Tanggal Dibuat</th>
+                                <td th:text="${#temporals.format(surat.createdAt, 'dd MMMM yyyy, HH:mm')}"></td>
+                            </tr>
+                            <tr>
+                                <th>Ketua Tim</th>
+                                <td th:text="${surat.ketuaTim.fullName ?: surat.ketuaTim.username}"></td>
+                            </tr>
+                            <tr>
+                                <th>Anggota Tim</th>
+                                <td>
+                                    <ul class="mb-0 ps-3">
+                                        <li th:each="anggota : ${surat.anggotaTim}" th:text="${anggota.fullName ?: anggota.username}"></li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr th:if="${surat.status.name() == 'DITOLAK'}">
+                                <th class="text-danger">Alasan Penolakan</th>
+                                <td class="text-danger" th:text="${surat.catatanPersetujuan}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer">
+                    <a th:href="@{/admin/surat-tugas/list}" class="btn btn-secondary">Kembali ke Daftar</a>
+                    <a th:href="@{/admin/surat-tugas/edit/{id}(id=${surat.id})}" class="btn btn-warning">Edit Surat Ini</a>
+                </div>
+            </div>
 
-                <dt class="col-sm-3">Tujuan Audit</dt>
-                <dd class="col-sm-9"><p th:text="${surat.tujuan}"></p></dd>
-
-                <dt class="col-sm-3">Tanggal Dibuat</dt>
-                <dd class="col-sm-9" th:text="${#temporals.format(surat.createdAt, 'dd MMMM yyyy, HH:mm')}"></dd>
-                
-                <dt class="col-sm-3">File Surat</dt>
-                <dd class="col-sm-9"><a th:href="${fileUrl}" th:text="${surat.filePath}" target="_blank">Download/Lihat File</a></dd>
-
-                <hr class="my-3">
-
-                <dt class="col-sm-3">Ketua Tim</dt>
-                <dd class="col-sm-9" th:text="${surat.ketuaTim.fullName ?: surat.ketuaTim.username}"></dd>
-                
-                <dt class="col-sm-3">Anggota Tim</dt>
-                <dd class="col-sm-9">
-                    <ul>
-                        <li th:each="anggota : ${surat.anggotaTim}" th:text="${anggota.fullName ?: anggota.username}"></li>
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h4>Riwayat Perjalanan Surat</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li th:each="hist : ${history}" class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1" th:text="${hist.status.displayName}"></h5>
+                                <small th:text="${#temporals.format(hist.timestamp, 'dd MMM yyyy HH:mm')}"></small>
+                            </div>
+                            <p class="mb-1" th:text="${hist.notes}"></p>
+                            <small class="text-muted" th:if="${hist.actor}" th:text="'Oleh: ' + ${hist.actor.fullName ?: hist.actor.username}"></small>
+                        </li>
+                        <li th:if="${#lists.isEmpty(history)}" class="list-group-item">
+                            <p class="text-muted mb-0">Riwayat tidak ditemukan.</p>
+                        </li>
                     </ul>
-                </dd>
-            </dl>
+                </div>
+            </div>
         </div>
-        <div class="card-footer">
-            <a th:href="@{/admin/surat-tugas/list}" class="btn btn-secondary">Kembali ke Daftar</a>
-            <a th:href="@{/admin/surat-tugas/edit/{id}(id=${surat.id})}" class="btn btn-warning">Edit Surat Ini</a>
+
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Pratinjau File Surat</h4>
+                </div>
+                <div class="card-body" style="height: 120vh;">
+                    <embed th:src="@{${fileUrl}}" type="application/pdf" width="100%" height="100%">
+                        <p>Browser Anda tidak mendukung pratinjau PDF. Silakan <a th:href="@{${fileUrl}}" target="_blank">unduh file</a> untuk melihatnya.</p>
+                    </embed>
+                </div>
+            </div>
         </div>
     </div>
 </main>

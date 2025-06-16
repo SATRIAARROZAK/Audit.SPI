@@ -3,9 +3,11 @@ package Audit.Auditing.service;
 import Audit.Auditing.dto.SuratTugasDTO;
 import Audit.Auditing.model.StatusSuratTugas;
 import Audit.Auditing.model.SuratTugas;
+import Audit.Auditing.model.SuratTugasHistory;
 import Audit.Auditing.model.User;
 import Audit.Auditing.repository.SuratTugasRepository;
 import Audit.Auditing.repository.UserRepository;
+import Audit.Auditing.repository.SuratTugasHistoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,9 @@ public class SuratTugasServiceImpl implements SuratTugasService {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private SuratTugasHistoryRepository suratTugasHistoryRepository;
 
     
 
@@ -63,6 +68,9 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugas.setAnggotaTim(anggotaTim);
         suratTugas.setStatus(StatusSuratTugas.BARU); // Status awal
         suratTugasRepository.save(suratTugas);
+
+        SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.BARU, null, "Surat tugas dibuat oleh Admin.");
+        suratTugasHistoryRepository.save(history);
     }
 
     @Override
@@ -112,6 +120,8 @@ public class SuratTugasServiceImpl implements SuratTugasService {
 
         suratTugasRepository.save(suratTugas);
 
+         
+
     }
 
     @Override
@@ -135,6 +145,9 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugas.setStatus(StatusSuratTugas.REVIEW_SEKRETARIS); // Status diubah
 
         suratTugasRepository.save(suratTugas);
+
+         SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.REVIEW_SEKRETARIS, null, "Direview oleh Sekretaris dan jadwal telah ditetapkan.");
+        suratTugasHistoryRepository.save(history);
     }
 
 
@@ -154,6 +167,9 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugas.setCatatanPersetujuan("Disetujui.");
 
         suratTugasRepository.save(suratTugas);
+
+          SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DISETUJUI, approver, "Surat disetujui.");
+        suratTugasHistoryRepository.save(history);
     }
 
     @Override
@@ -172,6 +188,9 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugas.setCatatanPersetujuan(catatan);
 
         suratTugasRepository.save(suratTugas);
+
+         SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DITOLAK, approver, catatan);
+        suratTugasHistoryRepository.save(history);
     }
 
     @Override

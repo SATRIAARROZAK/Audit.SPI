@@ -11,7 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.EnumSet;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -30,14 +30,23 @@ public class KepalaSpiController {
         return "kepalaspi/list-surat-tugas";
     }
 
-    @GetMapping("/view/{id}")
+     @GetMapping("/view/{id}")
     public String showApprovalForm(@PathVariable("id") Long id, Model model, RedirectAttributes ra) {
         Optional<SuratTugas> suratOpt = suratTugasService.getSuratTugasById(id);
         if (suratOpt.isEmpty() || suratOpt.get().getStatus() != StatusSuratTugas.REVIEW_SEKRETARIS) {
             ra.addFlashAttribute("errorMessage", "Surat tugas tidak valid atau tidak dalam status yang benar untuk persetujuan.");
             return "redirect:/kepalaspi/surat-tugas/list";
         }
-        model.addAttribute("surat", suratOpt.get());
+        SuratTugas surat = suratOpt.get();
+        String filePath = surat.getFilePath();
+
+        // --- TAMBAHKAN LOGIKA INI ---
+        boolean isPdf = filePath != null && filePath.toLowerCase().endsWith(".pdf");
+
+        model.addAttribute("surat", surat);
+        model.addAttribute("fileUrl", "/profile-photos/" + filePath);
+        model.addAttribute("isPdf", isPdf); // Kirim flag isPdf ke view
+
         return "kepalaspi/form-persetujuan";
     }
 

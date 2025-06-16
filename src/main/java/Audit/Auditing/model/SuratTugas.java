@@ -6,6 +6,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
+import java.util.List; // Import List
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -34,11 +35,7 @@ public class SuratTugas {
     private User ketuaTim;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "surat_tugas_anggota",
-        joinColumns = @JoinColumn(name = "surat_tugas_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
+    @JoinTable(name = "surat_tugas_anggota", joinColumns = @JoinColumn(name = "surat_tugas_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> anggotaTim;
 
     @Column(name = "tanggal_mulai_audit")
@@ -46,7 +43,6 @@ public class SuratTugas {
 
     @Column(name = "tanggal_selesai_audit")
     private LocalDate tanggalSelesaiAudit;
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approver_id")
@@ -61,4 +57,8 @@ public class SuratTugas {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "suratTugas", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("timestamp ASC")
+    private List<SuratTugasHistory> history;
 }
