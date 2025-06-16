@@ -12,10 +12,11 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import java.nio.file.Files; // import ini
 import java.nio.file.Paths; // import ini
 import java.time.LocalDate;
+import Audit.Auditing.model.Role;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,17 +31,18 @@ public class SuratTugasServiceImpl implements SuratTugasService {
     @Autowired
     private SuratTugasRepository suratTugasRepository;
 
+  
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private FileStorageService fileStorageService;
-
-    @Autowired
     private SuratTugasHistoryRepository suratTugasHistoryRepository;
 
-    
+    @Autowired
+    private NotificationService notificationService;
 
+    @Autowired
+    private FileStorageService fileStorageService;
     @Override
     @Transactional
     public void createSuratTugas(SuratTugasDTO dto) {
@@ -69,7 +71,18 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugas.setStatus(StatusSuratTugas.BARU); // Status awal
         suratTugasRepository.save(suratTugas);
 
-        SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.BARU, null, "Surat tugas dibuat oleh Admin.");
+        // --- NOTIFIKASI BARU ---
+        // Cari semua sekretaris untuk dikirimi notifikasi
+        List<User> sekretarisUsers = userRepository.findByRole(Role.sekretaris);
+        for (User sekretaris : sekretarisUsers) {
+            String message = "Surat tugas baru '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20)
+                    + "' perlu direview.";
+            notificationService.createNotification(sekretaris, message,
+                    "/sekretaris/surat-tugas/review/" + suratTugas.getId());
+        }
+
+        SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.BARU, null,
+                "Surat tugas dibuat oleh Admin.");
         suratTugasHistoryRepository.save(history);
     }
 
@@ -91,19 +104,20 @@ public class SuratTugasServiceImpl implements SuratTugasService {
                 .orElseThrow(() -> new EntityNotFoundException("Surat Tugas dengan ID " + id + " tidak ditemukan."));
 
         // Handle file update: hanya update jika file baru di-upload
-         // PERBAIKAN 1: Logika update file yang lebih aman
+        // PERBAIKAN 1: Logika update file yang lebih aman
         if (dto.getSuratFile() != null && !dto.getSuratFile().isEmpty()) {
-            // Hanya hapus file lama jika path-nya ada (tidak null atau kosong)
-            if (StringUtils.hasText(suratTugas.getFilePath())) {
-                try {
-                    Files.deleteIfExists(Paths.get(fileStorageService.getFileStorageLocation().toString(), suratTugas.getFilePath()));
-                } catch (Exception e) {
-                    System.err.println("Gagal menghapus file lama: " + e.getMessage());
-                }
-            }
-            String newFileName = fileStorageService.storeFile(dto.getSuratFile());
-            suratTugas.setFilePath(newFileName);
+    // Hanya hapus file lama jika path-nya ada (tidak null atau kosong)
+    if (StringUtils.isNotBlank(suratTugas.getFilePath())) {
+        try {
+            Files.deleteIfExists(Paths.get(fileStorageService.getFileStorageLocation().toString(), suratTugas.getFilePath()));
+        } catch (Exception e) {
+            System.err.println("Gagal menghapus file lama: " + e.getMessage());
+            // Pertimbangkan untuk melempar exception atau logging yang lebih baik
         }
+    }
+    String newFileName = fileStorageService.storeFile(dto.getSuratFile());
+    suratTugas.setFilePath(newFileName);
+}
 
         // PERBAIKAN 2: Logika update relasi yang lebih aman
         User ketuaTim = userRepository.findById(dto.getKetuaTimId())
@@ -120,8 +134,6 @@ public class SuratTugasServiceImpl implements SuratTugasService {
 
         suratTugasRepository.save(suratTugas);
 
-         
-
     }
 
     @Override
@@ -133,23 +145,33 @@ public class SuratTugasServiceImpl implements SuratTugasService {
     @Transactional
     public void reviewAndSetDates(Long suratId, LocalDate tanggalMulai, LocalDate tanggalSelesai) {
         SuratTugas suratTugas = suratTugasRepository.findById(suratId)
-                .orElseThrow(() -> new EntityNotFoundException("Surat Tugas dengan ID " + suratId + " tidak ditemukan."));
+                .orElseThrow(
+                        () -> new EntityNotFoundException("Surat Tugas dengan ID " + suratId + " tidak ditemukan."));
 
         // Validasi status sebelum diubah
         if (suratTugas.getStatus() != StatusSuratTugas.BARU) {
             throw new IllegalStateException("Hanya surat dengan status 'BARU' yang dapat direview.");
         }
-        
+
         suratTugas.setTanggalMulaiAudit(tanggalMulai);
         suratTugas.setTanggalSelesaiAudit(tanggalSelesai);
         suratTugas.setStatus(StatusSuratTugas.REVIEW_SEKRETARIS); // Status diubah
 
         suratTugasRepository.save(suratTugas);
+        // --- NOTIFIKASI BARU ---
+        // Cari semua Kepala SPI untuk dikirimi notifikasi
+        List<User> kepalaSpiUsers = userRepository.findByRole(Role.kepalaspi);
+        for (User kepalaSpi : kepalaSpiUsers) {
+            String message = "Surat tugas '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20)
+                    + "' menunggu persetujuan.";
+            notificationService.createNotification(kepalaSpi, message,
+                    "/kepalaspi/surat-tugas/view/" + suratTugas.getId());
+        }
 
-         SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.REVIEW_SEKRETARIS, null, "Direview oleh Sekretaris dan jadwal telah ditetapkan.");
+        SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.REVIEW_SEKRETARIS, null,
+                "Direview oleh Sekretaris dan jadwal telah ditetapkan.");
         suratTugasHistoryRepository.save(history);
     }
-
 
     @Override
     @Transactional
@@ -167,8 +189,17 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugas.setCatatanPersetujuan("Disetujui.");
 
         suratTugasRepository.save(suratTugas);
+        // --- NOTIFIKASI BARU ---
+        // Notifikasi ke admin dan tim audit
+        List<User> adminUsers = userRepository.findByRole(Role.admin);
+        String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20) + "' telah DISETUJUI.";
+        for (User admin : adminUsers) {
+             notificationService.createNotification(admin, message, "/admin/surat-tugas/view/" + suratTugas.getId());
+        }
+        notificationService.createNotification(suratTugas.getKetuaTim(), message, "/admin/surat-tugas/view/" + suratTugas.getId());
 
-          SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DISETUJUI, approver, "Surat disetujui.");
+        SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DISETUJUI, approver,
+                "Surat disetujui.");
         suratTugasHistoryRepository.save(history);
     }
 
@@ -188,8 +219,17 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugas.setCatatanPersetujuan(catatan);
 
         suratTugasRepository.save(suratTugas);
+        List<User> adminUsers = userRepository.findByRole(Role.admin);
+        List<User> sekretarisUsers = userRepository.findByRole(Role.sekretaris);
+        String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20) + "' DITOLAK.";
+        for (User admin : adminUsers) {
+            notificationService.createNotification(admin, message, "/admin/surat-tugas/view/" + suratTugas.getId());
+        }
+        for (User sekretaris : sekretarisUsers) {
+            notificationService.createNotification(sekretaris, message, "/admin/surat-tugas/view/" + suratTugas.getId());
+        }
 
-         SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DITOLAK, approver, catatan);
+        SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DITOLAK, approver, catatan);
         suratTugasHistoryRepository.save(history);
     }
 

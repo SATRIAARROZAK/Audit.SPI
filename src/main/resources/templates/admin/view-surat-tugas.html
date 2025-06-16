@@ -84,12 +84,12 @@
                         <h4>Pratinjau File Surat</h4>
                     </div>
                     <div th:if="${isPdf}">
-                                <img th:src="@{/pdf/preview/{fileName}(fileName=${surat.filePath})}" class="img-fluid"
-                                    alt="Preview Halaman 1" />
-                            </div>
-                            <div th:unless="${isPdf}">
-                                <img th:src="@{${fileUrl}}" class="img-fluid" alt="Preview File" />
-                            </div>
+                        <img th:src="@{/pdf/preview/{fileName}(fileName=${surat.filePath})}" class="img-fluid"
+                            alt="Preview Halaman 1" />
+                    </div>
+                    <div th:unless="${isPdf}">
+                        <img th:src="@{${fileUrl}}" class="img-fluid" alt="Preview File" />
+                    </div>
                     <!-- <div class="card-body" style="height: 120vh;">
                         <div class="card-body" style="height: 120vh; overflow-y: auto;">
                             

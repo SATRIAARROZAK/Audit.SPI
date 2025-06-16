@@ -68,6 +68,7 @@
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+	
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -94,6 +95,10 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+			<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-lang3</artifactId>
+    <version>3.12.0</version> </dependency>
 	</dependencies>
 
 	<build>

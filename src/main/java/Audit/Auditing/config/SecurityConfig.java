@@ -31,10 +31,14 @@ public class SecurityConfig {
                                                                 "/profile/edit", "/profile/update",
                                                                 "/profile-photos/**", "/pdf/**") // <-- TAMBAHKAN INI
                                                 .permitAll()
+                                                .requestMatchers("/api/**").authenticated() // <-- TAMBAHKAN BARIS INI
+
                                                 // Aturan untuk role spesifik
                                                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
-                                                // PERUBAHAN: Berikan akses ke SEKRETARIS dan KEPALASPI untuk fitur persetujuan
-                                                .requestMatchers("/kepalaspi/**").hasAnyAuthority("KEPALASPI", "SEKRETARIS")
+                                                // PERUBAHAN: Berikan akses ke SEKRETARIS dan KEPALASPI untuk fitur
+                                                // persetujuan
+                                                .requestMatchers("/kepalaspi/**")
+                                                .hasAnyAuthority("KEPALASPI", "SEKRETARIS")
                                                 // SEKRETARIS tetap punya akses ke fitur review-nya
                                                 .requestMatchers("/sekretaris/**").hasAuthority("SEKRETARIS")
                                                 .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI")

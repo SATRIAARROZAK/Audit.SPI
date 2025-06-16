@@ -33,7 +33,8 @@
                             Surat Tugas
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="sekretarisDropdown">
-                            <li><a class="dropdown-item" th:href="@{/sekretaris/surat-tugas/list}">Review Surat Masuk</a>
+                            <li><a class="dropdown-item" th:href="@{/sekretaris/surat-tugas/list}">Review Surat
+                                    Masuk</a>
                             </li>
                         </ul>
                     </li>
@@ -43,16 +44,26 @@
                             Persetujuan
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="kepalaSpiDropdown">
-                            <li><a class="dropdown-item" th:href="@{/kepalaspi/surat-tugas/list}">Persetujuan Surat Tugas</a></li>
+                            <li><a class="dropdown-item" th:href="@{/kepalaspi/surat-tugas/list}">Persetujuan Surat
+                                    Tugas</a></li>
                         </ul>
                     </li>
 
                 </ul>
-
-
-
-                </ul>
-
+            
+                   <div class="dropdown me-3">
+                    <a href="#" class="text-white" id="notificationBell" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-bell fs-5 position-relative">
+                            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6em; display: none;">
+                                9+
+                            </span>
+                        </i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="notificationBell" id="notification-list" style="width: 350px;">
+                        <li><a class="dropdown-item text-center" href="#">Tidak ada notifikasi</a></li>
+                    </ul>
+                </div>
+                
                 <div class="dropdown">
                     <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
                         id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
