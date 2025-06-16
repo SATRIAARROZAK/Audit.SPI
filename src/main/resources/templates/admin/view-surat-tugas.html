@@ -28,6 +28,7 @@
                                     <th>Tanggal Diupload</th>
                                     <td th:text="${#temporals.format(surat.createdAt, 'dd MMMM yyyy, HH:mm')}"></td>
                                 </tr>
+
                                 <tr>
                                     <th>Ketua Tim</th>
                                     <td th:text="${surat.ketuaTim.fullName ?: surat.ketuaTim.username}"></td>

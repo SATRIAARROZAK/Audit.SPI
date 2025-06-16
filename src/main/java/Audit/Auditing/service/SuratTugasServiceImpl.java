@@ -4,6 +4,7 @@ import Audit.Auditing.dto.SuratTugasDTO;
 import Audit.Auditing.model.StatusSuratTugas;
 import Audit.Auditing.model.SuratTugas;
 import Audit.Auditing.model.SuratTugasHistory;
+// import Audit.Auditing.model.StatusSuratTugas;
 import Audit.Auditing.model.User;
 import Audit.Auditing.repository.SuratTugasRepository;
 import Audit.Auditing.repository.UserRepository;
@@ -31,7 +32,6 @@ public class SuratTugasServiceImpl implements SuratTugasService {
     @Autowired
     private SuratTugasRepository suratTugasRepository;
 
-  
     @Autowired
     private UserRepository userRepository;
 
@@ -43,6 +43,7 @@ public class SuratTugasServiceImpl implements SuratTugasService {
 
     @Autowired
     private FileStorageService fileStorageService;
+
     @Override
     @Transactional
     public void createSuratTugas(SuratTugasDTO dto) {
@@ -86,15 +87,27 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugasHistoryRepository.save(history);
     }
 
-    @Override
-    public List<SuratTugas> getAllSuratTugas() {
-        // Mengurutkan berdasarkan tanggal dibuat, yang terbaru di atas
-        return suratTugasRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
-    }
+    // @Override
+    // public List<SuratTugas> getAllSuratTugas() {
+    // // Mengurutkan berdasarkan tanggal dibuat, yang terbaru di atas
+    // return suratTugasRepository.findAll(Sort.by(Sort.Direction.DESC,
+    // "createdAt"));
+    // }
 
     @Override
     public Optional<SuratTugas> getSuratTugasById(Long id) {
         return suratTugasRepository.findById(id);
+    }
+
+    @Override
+    public List<SuratTugas> getAllSuratTugas() {
+        return suratTugasRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
+    // ...
+    @Override
+    public List<SuratTugas> getSuratByStatus(StatusSuratTugas status) {
+        return suratTugasRepository.findByStatus(status, Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
     @Override
@@ -106,18 +119,19 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         // Handle file update: hanya update jika file baru di-upload
         // PERBAIKAN 1: Logika update file yang lebih aman
         if (dto.getSuratFile() != null && !dto.getSuratFile().isEmpty()) {
-    // Hanya hapus file lama jika path-nya ada (tidak null atau kosong)
-    if (StringUtils.isNotBlank(suratTugas.getFilePath())) {
-        try {
-            Files.deleteIfExists(Paths.get(fileStorageService.getFileStorageLocation().toString(), suratTugas.getFilePath()));
-        } catch (Exception e) {
-            System.err.println("Gagal menghapus file lama: " + e.getMessage());
-            // Pertimbangkan untuk melempar exception atau logging yang lebih baik
+            // Hanya hapus file lama jika path-nya ada (tidak null atau kosong)
+            if (StringUtils.isNotBlank(suratTugas.getFilePath())) {
+                try {
+                    Files.deleteIfExists(Paths.get(fileStorageService.getFileStorageLocation().toString(),
+                            suratTugas.getFilePath()));
+                } catch (Exception e) {
+                    System.err.println("Gagal menghapus file lama: " + e.getMessage());
+                    // Pertimbangkan untuk melempar exception atau logging yang lebih baik
+                }
+            }
+            String newFileName = fileStorageService.storeFile(dto.getSuratFile());
+            suratTugas.setFilePath(newFileName);
         }
-    }
-    String newFileName = fileStorageService.storeFile(dto.getSuratFile());
-    suratTugas.setFilePath(newFileName);
-}
 
         // PERBAIKAN 2: Logika update relasi yang lebih aman
         User ketuaTim = userRepository.findById(dto.getKetuaTimId())
@@ -134,11 +148,6 @@ public class SuratTugasServiceImpl implements SuratTugasService {
 
         suratTugasRepository.save(suratTugas);
 
-    }
-
-    @Override
-    public List<SuratTugas> getSuratByStatus(StatusSuratTugas status) {
-        return suratTugasRepository.findByStatus(status, Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
     @Override
@@ -194,9 +203,10 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         List<User> adminUsers = userRepository.findByRole(Role.admin);
         String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20) + "' telah DISETUJUI.";
         for (User admin : adminUsers) {
-             notificationService.createNotification(admin, message, "/admin/surat-tugas/view/" + suratTugas.getId());
+            notificationService.createNotification(admin, message, "/admin/surat-tugas/view/" + suratTugas.getId());
         }
-        notificationService.createNotification(suratTugas.getKetuaTim(), message, "/admin/surat-tugas/view/" + suratTugas.getId());
+        notificationService.createNotification(suratTugas.getKetuaTim(), message,
+                "/admin/surat-tugas/view/" + suratTugas.getId());
 
         SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DISETUJUI, approver,
                 "Surat disetujui.");
@@ -226,7 +236,8 @@ public class SuratTugasServiceImpl implements SuratTugasService {
             notificationService.createNotification(admin, message, "/admin/surat-tugas/view/" + suratTugas.getId());
         }
         for (User sekretaris : sekretarisUsers) {
-            notificationService.createNotification(sekretaris, message, "/admin/surat-tugas/view/" + suratTugas.getId());
+            notificationService.createNotification(sekretaris, message,
+                    "/admin/surat-tugas/view/" + suratTugas.getId());
         }
 
         SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DITOLAK, approver, catatan);

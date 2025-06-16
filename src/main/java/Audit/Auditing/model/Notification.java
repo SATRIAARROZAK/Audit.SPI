@@ -21,7 +21,7 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_id", nullable = false)
-    private User recipient; // Pengguna yang menerima notifikasi
+    private User recipient;
 
     @Column(nullable = false)
     private String message;
@@ -30,11 +30,11 @@ public class Notification {
     private boolean isRead = false;
 
     @Column
-    private String link; // URL untuk diklik
+    private String link;
 
     @CreatedDate
-    @Column(name = "timestamp", nullable = false, updatable = false) // <-- UBAH "created_at" MENJADI "timestamp"
-    private LocalDateTime timestamp; // <-- UBAH NAMA FIELD INI
+    @Column(name = "timestamp", nullable = false, updatable = false)
+    private LocalDateTime timestamp;
 
     public Notification(User recipient, String message, String link) {
         this.recipient = recipient;
