@@ -25,12 +25,14 @@ public class NotificationService {
     }
 
     public List<Notification> getNotificationsForUser(Long userId) {
-        return notificationRepository.findByRecipientIdOrderByCreatedAtDesc(userId);
+        // GANTI method call untuk menyesuaikan dengan repository
+        return notificationRepository.findByRecipientIdOrderByTimestampDesc(userId);
     }
 
     @Transactional
     public void markAllAsRead(Long userId) {
-        List<Notification> unreadNotifications = notificationRepository.findByRecipientIdAndIsReadFalseOrderByCreatedAtDesc(userId);
+        // GANTI method call untuk menyesuaikan dengan repository
+        List<Notification> unreadNotifications = notificationRepository.findByRecipientIdAndIsReadFalseOrderByTimestampDesc(userId);
         for (Notification notification : unreadNotifications) {
             notification.setRead(true);
         }

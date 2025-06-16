@@ -33,8 +33,8 @@ public class Notification {
     private String link; // URL untuk diklik
 
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "timestamp", nullable = false, updatable = false) // <-- UBAH "created_at" MENJADI "timestamp"
+    private LocalDateTime timestamp; // <-- UBAH NAMA FIELD INI
 
     public Notification(User recipient, String message, String link) {
         this.recipient = recipient;
