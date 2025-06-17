@@ -25,12 +25,12 @@ public class NotificationService {
     }
 
     public List<Notification> getNotificationsForUser(Long userId) {
-        return notificationRepository.findByRecipientIdOrderByTimestampDesc(userId);
+        return notificationRepository.findByRecipientIdOrderByCreatedAtDesc(userId);
     }
 
     @Transactional
     public void markAllAsRead(Long userId) {
-        List<Notification> unreadNotifications = notificationRepository.findByRecipientIdAndIsReadFalseOrderByTimestampDesc(userId);
+        List<Notification> unreadNotifications = notificationRepository.findByRecipientIdAndIsReadFalseOrderByCreatedAtDesc(userId);
         for (Notification notification : unreadNotifications) {
             notification.setRead(true);
         }

@@ -33,8 +33,8 @@ public class Notification {
     private String link;
 
     @CreatedDate
-    @Column(name = "timestamp", nullable = false, updatable = false)
-    private LocalDateTime timestamp;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     public Notification(User recipient, String message, String link) {
         this.recipient = recipient;
