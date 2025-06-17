@@ -10,8 +10,8 @@
             const notificationBadge = document.getElementById('notification-badge');
             const notificationList = document.getElementById('notification-list');
             const notificationBell = document.getElementById('notificationBell');
-            const csrfToken = document.querySelector('meta[name="_csrf"]'); // Untuk Spring Security CSRF jika aktif
-            const csrfHeader = document.querySelector('meta[name="_csrf_header"]'); // Untuk Spring Security CSRF jika aktif
+            const csrfTokenEl = document.querySelector('meta[name="_csrf"]');
+            const csrfHeaderEl = document.querySelector('meta[name="_csrf_header"]');
 
             async function fetchUnreadCount() {
                 try {
@@ -36,31 +36,55 @@
                     if (!response.ok) return;
                     const notifications = await response.json();
 
-                    notificationList.innerHTML = ''; // Kosongkan list
+                    notificationList.innerHTML = ''; 
+
                     if (notifications.length === 0) {
-                        notificationList.innerHTML = '<li><a class="dropdown-item text-center text-light" href="#">Tidak ada notifikasi.</a></li>';
+                        const emptyItem = `<li><div class="dropdown-item text-center text-light fst-italic">Tidak ada notifikasi.</div></li>`;
+                        notificationList.insertAdjacentHTML('beforeend', emptyItem);
                         return;
                     }
 
                     notifications.forEach(notif => {
-                        const item = document.createElement('li');
-                        const link = document.createElement('a');
-                        link.href = notif.link ? notif.link : '#';
-                        link.classList.add('dropdown-item', 'text-wrap');
-                        if (!notif.read) {
-                            link.classList.add('fw-bold');
-                        }
-                        link.innerHTML = `
-                            ${notif.message}
-                            <small class="d-block text-muted">${new Date(notif.createdAt).toLocaleString()}</small>
-                        `;
-                        item.appendChild(link);
-                        notificationList.appendChild(item);
+                        // PERBAIKAN DILAKUKAN DI SINI
+                        const item = `
+                            <li class="list-group-item list-group-item-dark p-3 border-0 border-bottom border-secondary notification-item">
+                                <div class="d-flex w-100">
+                                    <div class="me-3 align-self-center">
+                                        <i class="fas ${!notif.read ? 'fa-envelope-open-text' : 'fa-envelope'} text-info fs-4"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <a href="${notif.link || '#'}" class="text-decoration-none text-white stretched-link">
+                                            <p class="mb-1 message-content ${!notif.read ? 'fw-bold' : ''}">
+                                                ${notif.message}
+                                            </p>
+                                        </a>
+                                        <small class="d-block text-cyan-50">
+                                            <i class="far fa-clock me-1"></i>${new Date(notif.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                        </small>
+                                    </div>
+                                    <div class="ms-2 align-self-center" style="position: relative; z-index: 1;">
+                                        <button class="btn btn-sm btn-outline-danger border-0 delete-notification-btn" data-id="${notif.id}" title="Hapus Notifikasi">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </li>`;
+                        notificationList.insertAdjacentHTML('beforeend', item);
                     });
+
+                    const footer = `
+                        <li class="bg-dark">
+                            <div class="text-center py-2">
+                                <button class="btn btn-danger btn-sm" id="delete-all-notifications-btn">
+                                    <i class="fas fa-broom me-1"></i> Hapus Semua
+                                </button>
+                            </div>
+                        </li>`;
+                    notificationList.insertAdjacentHTML('beforeend', footer);
 
                 } catch (error) {
                     console.error('Gagal mengambil daftar notifikasi:', error);
-                    notificationList.innerHTML = '<li><a class="dropdown-item text-center text-danger" href="#">Gagal memuat notifikasi.</a></li>';
+                    notificationList.innerHTML = '<li><div class="dropdown-item text-center text-danger">Gagal memuat notifikasi.</div></li>';
                 }
             }
 
@@ -70,28 +94,96 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' }
                      };
-                     // Tambahkan header CSRF jika ada
-                    if(csrfToken && csrfHeader){
-                        fetchOptions.headers[csrfHeader.content] = csrfToken.content;
+                    if(csrfTokenEl && csrfHeaderEl){
+                        fetchOptions.headers[csrfHeaderEl.content] = csrfTokenEl.content;
                     }
                     await fetch('/api/notifications/mark-as-read', fetchOptions);
-                    
                     notificationBadge.style.display = 'none';
                 } catch (error) {
                     console.error('Gagal menandai notifikasi sebagai terbaca:', error);
                 }
             }
+            
+            async function deleteNotification(id, element) {
+                try {
+                    const fetchOptions = {
+                        method: 'DELETE',
+                        headers: {}
+                    };
+                    if (csrfTokenEl && csrfHeaderEl) {
+                        fetchOptions.headers[csrfHeaderEl.content] = csrfTokenEl.content;
+                    }
+                    const response = await fetch(`/api/notifications/${id}`, fetchOptions);
 
-            notificationBell.addEventListener('show.bs.dropdown', function () {
-                fetchNotifications();
-                markAsRead();
+                    if (response.ok) {
+                        element.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        element.style.opacity = '0';
+                        element.style.transform = 'translateX(20px)';
+                        setTimeout(() => {
+                            element.remove();
+                            if (notificationList.querySelectorAll('.notification-item').length === 0) {
+                                fetchNotifications(); 
+                            }
+                        }, 300);
+                    } else {
+                        alert('Gagal menghapus notifikasi.');
+                    }
+                } catch (error) {
+                    console.error('Error saat menghapus notifikasi:', error);
+                }
+            }
+
+
+            async function deleteAllNotifications() {
+                if (!confirm('Apakah Anda yakin ingin menghapus SEMUA notifikasi? Aksi ini tidak dapat dibatalkan.')) {
+                    return;
+                }
+                try {
+                    const fetchOptions = {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    };
+                    if(csrfTokenEl && csrfHeaderEl){
+                        fetchOptions.headers[csrfHeaderEl.content] = csrfTokenEl.content;
+                    }
+                    const response = await fetch('/api/notifications/delete-all', fetchOptions);
+
+                    if (response.ok) {
+                        notificationList.innerHTML = '<li><div class="dropdown-item text-center text-light fst-italic">Tidak ada notifikasi.</div></li>';
+                        fetchUnreadCount();
+                    } else {
+                        alert('Gagal menghapus notifikasi di server.');
+                    }
+                } catch (error) {
+                    console.error('Error saat menghapus semua notifikasi:', error);
+                    alert('Terjadi kesalahan koneksi saat menghapus notifikasi.');
+                }
+            }
+
+            notificationList.addEventListener('click', function(event) {
+                const deleteButton = event.target.closest('.delete-notification-btn');
+                const deleteAllButton = event.target.closest('#delete-all-notifications-btn');
+
+                if (deleteButton) {
+                    event.stopPropagation();
+                    const notifId = deleteButton.dataset.id;
+                    const notifElement = deleteButton.closest('li.notification-item');
+                    deleteNotification(notifId, notifElement);
+                }
+                
+                if (deleteAllButton) {
+                    event.stopPropagation();
+                    deleteAllNotifications();
+                }
             });
 
-            // Panggil saat halaman dimuat
+            notificationBell.addEventListener('show.bs.dropdown', async function () {
+                await fetchNotifications();
+                await markAsRead();
+            });
+
             fetchUnreadCount();
-            
-            // Periksa notifikasi baru setiap 1 menit
-            setInterval(fetchUnreadCount, 60000);
+            setInterval(fetchUnreadCount, 5000);
         });
     </script>
     </div>

@@ -44,9 +44,9 @@
                                 </td>
                                 <td>
                                     <a th:href="@{/admin/users/edit/{id}(id=${user.id})}"
-                                        class="btn btn-warning btn-sm">Edit</a>
-                                    <a th:href="@{/admin/users/delete/{id}(id=${user.id})}" class="btn btn-danger btn-sm"
-                                        onclick="return confirm('Apakah Anda yakin ingin menghapus user ini?');">Hapus</a>
+                                        class="btn btn-outline-warning" title="Edit User"> <i class="bi bi-pencil-square"></i></a>
+                                    <a th:href="@{/admin/users/delete/{id}(id=${user.id})}" class="btn btn-outline-danger"
+                                        onclick="return confirm('Apakah Anda yakin ingin menghapus user ini?');" title="Hapus User"><i class="bi bi-trash3-fill"></i></a>
                                 </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(users)}">

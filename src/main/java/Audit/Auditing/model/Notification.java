@@ -1,3 +1,4 @@
+// Path: src/main/java/Audit/Auditing/model/Notification.java
 package Audit.Auditing.model;
 
 import jakarta.persistence.*;
@@ -19,7 +20,7 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER) // PERUBAHAN DI SINI
     @JoinColumn(name = "recipient_id", nullable = false)
     private User recipient;
 

@@ -1,19 +1,19 @@
+// Path: src/main/java/Audit/Auditing/controller/NotificationController.java
 package Audit.Auditing.controller;
 
 import Audit.Auditing.config.CustomUserDetails;
 import Audit.Auditing.model.Notification;
+import Audit.Auditing.repository.NotificationRepository;
 import Audit.Auditing.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -21,6 +21,9 @@ public class NotificationController {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private NotificationRepository notificationRepository; // Diperlukan untuk verifikasi
 
     @GetMapping("/unread-count")
     public ResponseEntity<Map<String, Long>> getUnreadCount(@AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -49,5 +52,30 @@ public class NotificationController {
         }
         notificationService.markAllAsRead(userDetails.getUser().getId());
         return ResponseEntity.ok().build();
+    }
+    
+    @PostMapping("/delete-all")
+    public ResponseEntity<Void> deleteAllNotifications(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        notificationService.deleteAllForUser(userDetails.getUser().getId());
+        return ResponseEntity.ok().build();
+    }
+
+    // Endpoint baru untuk menghapus notifikasi individual
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteNotification(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build(); // Unauthorized
+        }
+
+        Optional<Notification> notifOpt = notificationRepository.findById(id);
+        if (notifOpt.isPresent() && notifOpt.get().getRecipient().getId().equals(userDetails.getUser().getId())) {
+            notificationService.deleteNotification(id);
+            return ResponseEntity.ok().build();
+        }
+        
+        return ResponseEntity.status(403).build(); // Forbidden (bukan notifikasi milik user)
     }
 }

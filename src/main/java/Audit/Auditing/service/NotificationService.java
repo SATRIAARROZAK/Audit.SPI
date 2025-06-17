@@ -1,3 +1,4 @@
+// Path: src/main/java/Audit/Auditing/service/NotificationService.java
 package Audit.Auditing.service;
 
 import Audit.Auditing.model.Notification;
@@ -35,5 +36,16 @@ public class NotificationService {
             notification.setRead(true);
         }
         notificationRepository.saveAll(unreadNotifications);
+    }
+
+    @Transactional
+    public void deleteAllForUser(Long userId) {
+        notificationRepository.deleteAllByRecipientId(userId);
+    }
+
+    // Metode baru untuk menghapus notifikasi individual
+    @Transactional
+    public void deleteNotification(Long id) {
+        notificationRepository.deleteById(id);
     }
 }

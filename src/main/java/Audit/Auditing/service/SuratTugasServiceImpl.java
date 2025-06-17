@@ -1,10 +1,10 @@
+// Path: src/main/java/Audit/Auditing/service/SuratTugasServiceImpl.java
 package Audit.Auditing.service;
 
 import Audit.Auditing.dto.SuratTugasDTO;
 import Audit.Auditing.model.StatusSuratTugas;
 import Audit.Auditing.model.SuratTugas;
 import Audit.Auditing.model.SuratTugasHistory;
-// import Audit.Auditing.model.StatusSuratTugas;
 import Audit.Auditing.model.User;
 import Audit.Auditing.repository.SuratTugasRepository;
 import Audit.Auditing.repository.UserRepository;
@@ -14,8 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.StringUtils;
-import java.nio.file.Files; // import ini
-import java.nio.file.Paths; // import ini
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import Audit.Auditing.model.Role;
 import java.time.LocalDateTime;
@@ -47,13 +47,11 @@ public class SuratTugasServiceImpl implements SuratTugasService {
     @Override
     @Transactional
     public void createSuratTugas(SuratTugasDTO dto) {
-        // 1. Simpan file yang di-upload
         String fileName = fileStorageService.storeFile(dto.getSuratFile());
         if (fileName == null) {
             throw new RuntimeException("Gagal menyimpan file.");
         }
 
-        // 2. Cari user untuk ketua dan anggota tim
         User ketuaTim = userRepository.findById(dto.getKetuaTimId())
                 .orElseThrow(() -> new EntityNotFoundException("Ketua Tim tidak ditemukan"));
 
@@ -63,21 +61,19 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         }
         Set<User> anggotaTim = new HashSet<>(anggotaList);
 
-        // 3. Buat dan simpan entitas SuratTugas
         SuratTugas suratTugas = new SuratTugas();
         suratTugas.setTujuan(dto.getTujuan());
         suratTugas.setFilePath(fileName);
         suratTugas.setKetuaTim(ketuaTim);
         suratTugas.setAnggotaTim(anggotaTim);
-        suratTugas.setStatus(StatusSuratTugas.BARU); // Status awal
+        suratTugas.setStatus(StatusSuratTugas.BARU);
         suratTugasRepository.save(suratTugas);
 
-        // --- NOTIFIKASI BARU ---
-        // Cari semua sekretaris untuk dikirimi notifikasi
         List<User> sekretarisUsers = userRepository.findByRole(Role.sekretaris);
         for (User sekretaris : sekretarisUsers) {
             String message = "Surat tugas baru '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20)
                     + "' perlu direview.";
+            // DIUBAH: Kembali ke halaman review spesifik
             notificationService.createNotification(sekretaris, message,
                     "/sekretaris/surat-tugas/review/" + suratTugas.getId());
         }
@@ -86,13 +82,6 @@ public class SuratTugasServiceImpl implements SuratTugasService {
                 "Surat tugas dibuat oleh Admin.");
         suratTugasHistoryRepository.save(history);
     }
-
-    // @Override
-    // public List<SuratTugas> getAllSuratTugas() {
-    // // Mengurutkan berdasarkan tanggal dibuat, yang terbaru di atas
-    // return suratTugasRepository.findAll(Sort.by(Sort.Direction.DESC,
-    // "createdAt"));
-    // }
 
     @Override
     public Optional<SuratTugas> getSuratTugasById(Long id) {
@@ -104,7 +93,6 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         return suratTugasRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
-    // ...
     @Override
     public List<SuratTugas> getSuratByStatus(StatusSuratTugas status) {
         return suratTugasRepository.findByStatus(status, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -116,38 +104,30 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         SuratTugas suratTugas = suratTugasRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Surat Tugas dengan ID " + id + " tidak ditemukan."));
 
-        // Handle file update: hanya update jika file baru di-upload
-        // PERBAIKAN 1: Logika update file yang lebih aman
         if (dto.getSuratFile() != null && !dto.getSuratFile().isEmpty()) {
-            // Hanya hapus file lama jika path-nya ada (tidak null atau kosong)
             if (StringUtils.isNotBlank(suratTugas.getFilePath())) {
                 try {
                     Files.deleteIfExists(Paths.get(fileStorageService.getFileStorageLocation().toString(),
                             suratTugas.getFilePath()));
                 } catch (Exception e) {
                     System.err.println("Gagal menghapus file lama: " + e.getMessage());
-                    // Pertimbangkan untuk melempar exception atau logging yang lebih baik
                 }
             }
             String newFileName = fileStorageService.storeFile(dto.getSuratFile());
             suratTugas.setFilePath(newFileName);
         }
 
-        // PERBAIKAN 2: Logika update relasi yang lebih aman
         User ketuaTim = userRepository.findById(dto.getKetuaTimId())
                 .orElseThrow(() -> new EntityNotFoundException("Ketua Tim tidak ditemukan"));
 
-        // Cek jika daftar ID anggota tidak null sebelum digunakan
         List<Long> anggotaIds = dto.getAnggotaTimIds() != null ? dto.getAnggotaTimIds() : Collections.emptyList();
         Set<User> anggotaTim = new HashSet<>(userRepository.findAllById(anggotaIds));
 
-        // Update field lainnya
         suratTugas.setTujuan(dto.getTujuan());
         suratTugas.setKetuaTim(ketuaTim);
-        suratTugas.setAnggotaTim(anggotaTim); // Menggunakan set yang sudah aman (bisa jadi kosong, tapi tidak null)
+        suratTugas.setAnggotaTim(anggotaTim);
 
         suratTugasRepository.save(suratTugas);
-
     }
 
     @Override
@@ -157,22 +137,20 @@ public class SuratTugasServiceImpl implements SuratTugasService {
                 .orElseThrow(
                         () -> new EntityNotFoundException("Surat Tugas dengan ID " + suratId + " tidak ditemukan."));
 
-        // Validasi status sebelum diubah
         if (suratTugas.getStatus() != StatusSuratTugas.BARU) {
             throw new IllegalStateException("Hanya surat dengan status 'BARU' yang dapat direview.");
         }
 
         suratTugas.setTanggalMulaiAudit(tanggalMulai);
         suratTugas.setTanggalSelesaiAudit(tanggalSelesai);
-        suratTugas.setStatus(StatusSuratTugas.REVIEW_SEKRETARIS); // Status diubah
+        suratTugas.setStatus(StatusSuratTugas.REVIEW_SEKRETARIS);
 
         suratTugasRepository.save(suratTugas);
-        // --- NOTIFIKASI BARU ---
-        // Cari semua Kepala SPI untuk dikirimi notifikasi
         List<User> kepalaSpiUsers = userRepository.findByRole(Role.kepalaspi);
         for (User kepalaSpi : kepalaSpiUsers) {
             String message = "Surat tugas '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20)
                     + "' menunggu persetujuan.";
+            // DIUBAH: Kembali ke halaman persetujuan spesifik
             notificationService.createNotification(kepalaSpi, message,
                     "/kepalaspi/surat-tugas/view/" + suratTugas.getId());
         }
@@ -198,15 +176,15 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugas.setCatatanPersetujuan("Disetujui.");
 
         suratTugasRepository.save(suratTugas);
-        // --- NOTIFIKASI BARU ---
-        // Notifikasi ke admin dan tim audit
         List<User> adminUsers = userRepository.findByRole(Role.admin);
         String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20) + "' telah DISETUJUI.";
         for (User admin : adminUsers) {
+            // DIUBAH: Kembali ke halaman detail untuk admin
             notificationService.createNotification(admin, message, "/admin/surat-tugas/view/" + suratTugas.getId());
         }
+        // Tidak diubah: Pegawai tetap ke dashboard karena tidak punya halaman detail
         notificationService.createNotification(suratTugas.getKetuaTim(), message,
-                "/admin/surat-tugas/view/" + suratTugas.getId());
+                "/dashboard");
 
         SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DISETUJUI, approver,
                 "Surat disetujui.");
@@ -233,9 +211,11 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         List<User> sekretarisUsers = userRepository.findByRole(Role.sekretaris);
         String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20) + "' DITOLAK.";
         for (User admin : adminUsers) {
+            // DIUBAH: Kembali ke halaman detail untuk admin
             notificationService.createNotification(admin, message, "/admin/surat-tugas/view/" + suratTugas.getId());
         }
         for (User sekretaris : sekretarisUsers) {
+            // DIUBAH: Kembali ke halaman detail (meskipun mungkin perlu penyesuaian hak akses)
             notificationService.createNotification(sekretaris, message,
                     "/admin/surat-tugas/view/" + suratTugas.getId());
         }
@@ -250,22 +230,16 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         SuratTugas suratTugas = suratTugasRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Surat Tugas dengan ID " + id + " tidak ditemukan."));
 
-        // --- LOGIKA BARU ---
-        // 1. Putuskan hubungan Many-to-Many dengan membersihkan list anggota
         suratTugas.getAnggotaTim().clear();
-        suratTugasRepository.save(suratTugas); // Simpan perubahan untuk menghapus relasi di join table
+        suratTugasRepository.save(suratTugas);
 
-        // 2. Hapus file dari storage
         try {
-            // Pastikan Anda memiliki metode getFileStorageLocation() di FileStorageService
             Files.deleteIfExists(
                     Paths.get(fileStorageService.getFileStorageLocation().toString(), suratTugas.getFilePath()));
         } catch (Exception e) {
             System.err.println("Gagal menghapus file terkait: " + e.getMessage());
-            // Sebaiknya log error ini, tapi jangan hentikan proses penghapusan data
         }
 
-        // 3. Hapus entitas utama setelah relasi dibersihkan
         suratTugasRepository.deleteById(id);
     }
 }

@@ -1,3 +1,4 @@
+// Path: src/main/resources/templates/fragments/_navbar.html
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
@@ -12,17 +13,14 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <!-- <a class="nav-link" th:href="@{/dashboard}">Dashboard</a> -->
-                    </li>
+                        </li>
                     <li class="nav-item dropdown" sec:authorize="hasAuthority('ADMIN')">
                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
                             Manajemen User
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                            <!-- <li><a class="dropdown-item" th:href="@{/admin/users/add}">Tambah User Baru</a></li> -->
                             <li><a class="dropdown-item" th:href="@{/admin/users/list}">Daftar User</a></li>
-                            <!-- <li><a class="dropdown-item" th:href="@{/admin/surat-tugas/new}">Buat Surat Tugas</a></li> -->
                             <li><a class="dropdown-item" th:href="@{/admin/surat-tugas/list}">Daftar Surat Tugas</a>
                             </li>
                         </ul>
@@ -59,8 +57,8 @@
                             </span>
                         </i>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="notificationBell" id="notification-list" style="width: 350px;">
-                        <li><a class="dropdown-item text-center" href="#">Tidak ada notifikasi</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-0" aria-labelledby="notificationBell" id="notification-list" style="width: 400px; max-height: 50vh; overflow-y: auto;">
+                        <li><div class="dropdown-item text-center fst-italic">Memuat notifikasi...</div></li>
                     </ul>
                 </div>
                 
