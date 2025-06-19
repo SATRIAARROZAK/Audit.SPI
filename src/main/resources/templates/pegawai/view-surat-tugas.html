@@ -30,7 +30,7 @@
                                 </tr>
                                 <tr>
                                     <th>Jadwal Audit</th>
-                                    <td th:text="${#temporals.format(surat.tanggalMulaiAudit, 'dd MMMM隷')} + ' s/d ' + ${#temporals.format(surat.tanggalSelesaiAudit, 'dd MMMM隷')}">
+                                    <td th:text="${#temporals.format(surat.tanggalMulaiAudit, 'dd MMMM YYYY')} + ' s/d ' + ${#temporals.format(surat.tanggalSelesaiAudit, 'dd MMMM YYYY')}">
                                     </td>
                                 </tr>
                                 <tr>

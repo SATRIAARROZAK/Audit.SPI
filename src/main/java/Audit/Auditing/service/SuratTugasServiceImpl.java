@@ -1,7 +1,6 @@
 package Audit.Auditing.service;
 
 import Audit.Auditing.dto.SuratTugasDTO;
-import Audit.Auditing.model.JenisAudit; // Import new enum
 import Audit.Auditing.model.StatusSuratTugas;
 import Audit.Auditing.model.SuratTugas;
 import Audit.Auditing.model.SuratTugasHistory;
@@ -123,7 +122,7 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         }
 
         // Handle file update: only if a new file is provided
-        if (dto.getSuratFile() != null && !dto.getSuratFile().isEmpty()) {
+          if (dto.getSuratFile() != null && !dto.getSuratFile().isEmpty()) {
             if (StringUtils.isNotBlank(suratTugas.getFilePath())) {
                 try {
                     Files.deleteIfExists(Paths.get(fileStorageService.getFileStorageLocation().toString(),
@@ -135,21 +134,17 @@ public class SuratTugasServiceImpl implements SuratTugasService {
             String newFileName = fileStorageService.storeFile(dto.getSuratFile());
             suratTugas.setFilePath(newFileName);
         } else {
-            // If no new file is uploaded, and the current status is DIKEMBALIKAN_KE_ADMIN or DITOLAK
-            // and there's no existing file path, then it's an error.
-            // But the current request implies if it's REVISED, no re-upload.
-            // If DITOLAK, user implies re-upload.
-            // This logic is tricky. For now, we'll allow updates without file if filePath exists.
-            // If the original file was deleted or never existed and no new one is provided,
-            // the `filePath` field could become null, which might violate `nullable=false` in SuratTugas.
-            // Assuming `filePath` will always exist after initial creation.
-             if (suratTugas.getFilePath() == null || suratTugas.getFilePath().isEmpty()) {
-                 // This case should ideally not happen if it was always required on create.
-                 // If it happens, it means the original file was removed manually or by error.
-                 // For now, let's assume it means a re-upload *is* required if there's no file.
-                 // This condition could be refined based on specific business rules.
-                 // throw new IllegalArgumentException("File surat tugas tidak boleh kosong jika tidak ada file sebelumnya.");
-             }
+            // If no new file is uploaded, ensure there's an existing file path.
+            // If not, this might indicate an issue or require re-upload for certain statuses.
+            // This part needs careful consideration based on business rules for revision.
+            // For example, if a surat was REJECTED and needs revision, maybe re-upload is mandatory.
+            // For now, assuming if no new file, old one persists.
+            if (suratTugas.getFilePath() == null || suratTugas.getFilePath().isEmpty()) {
+                // This scenario should ideally not happen if 'filePath' is always set on creation.
+                // If it does, you might want to throw an error or handle it.
+                // For instance, you could add:
+                // throw new IllegalArgumentException("File surat tugas harus diunggah ulang jika sebelumnya tidak ada.");
+            }
         }
 
 
@@ -157,6 +152,7 @@ public class SuratTugasServiceImpl implements SuratTugasService {
                 .orElseThrow(() -> new EntityNotFoundException("Ketua Tim tidak ditemukan"));
 
         List<Long> anggotaIds = dto.getAnggotaTimIds() != null ? dto.getAnggotaTimIds() : Collections.emptyList();
+        List<User> anggotaList = userRepository.findAllById(anggotaIds);
         Set<User> anggotaTim = new HashSet<>(anggotaList);
 
         suratTugas.setNomorSurat(dto.getNomorSurat());
