@@ -26,5 +26,10 @@ public interface SuratTugasService {
     void reviewAndSetDates(Long suratId, LocalDate tanggalMulai, LocalDate tanggalSelesai);
 
     void approveSuratTugas(Long suratId, User approver);
+
     void rejectSuratTugas(Long suratId, String catatan, User approver);
+
+        List<SuratTugas> getTugasUntukPegawai(User user);
+
+
 }

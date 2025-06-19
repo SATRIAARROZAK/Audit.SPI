@@ -178,17 +178,28 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugasRepository.save(suratTugas);
         List<User> adminUsers = userRepository.findByRole(Role.admin);
         String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20) + "' telah DISETUJUI.";
+
+        // Notifikasi ke Admin
         for (User admin : adminUsers) {
-            // DIUBAH: Kembali ke halaman detail untuk admin
             notificationService.createNotification(admin, message, "/admin/surat-tugas/view/" + suratTugas.getId());
         }
-        // Tidak diubah: Pegawai tetap ke dashboard karena tidak punya halaman detail
-        notificationService.createNotification(suratTugas.getKetuaTim(), message,
-                "/dashboard");
+
+        // Notifikasi ke Ketua dan Anggota Tim dengan link baru
+        String linkPegawai = "/pegawai/surat-tugas/view/" + suratTugas.getId();
+        notificationService.createNotification(suratTugas.getKetuaTim(), message, linkPegawai);
+        for (User anggota : suratTugas.getAnggotaTim()) {
+            notificationService.createNotification(anggota, message, linkPegawai);
+        }
 
         SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DISETUJUI, approver,
                 "Surat disetujui.");
         suratTugasHistoryRepository.save(history);
+    }
+
+    @Override
+    public List<SuratTugas> getTugasUntukPegawai(User user) {
+        // Mengambil hanya surat yang sudah disetujui
+        return suratTugasRepository.findTugasForUserByStatus(user, StatusSuratTugas.DISETUJUI);
     }
 
     @Override
@@ -215,7 +226,8 @@ public class SuratTugasServiceImpl implements SuratTugasService {
             notificationService.createNotification(admin, message, "/admin/surat-tugas/view/" + suratTugas.getId());
         }
         for (User sekretaris : sekretarisUsers) {
-            // DIUBAH: Kembali ke halaman detail (meskipun mungkin perlu penyesuaian hak akses)
+            // DIUBAH: Kembali ke halaman detail (meskipun mungkin perlu penyesuaian hak
+            // akses)
             notificationService.createNotification(sekretaris, message,
                     "/admin/surat-tugas/view/" + suratTugas.getId());
         }
@@ -242,4 +254,13 @@ public class SuratTugasServiceImpl implements SuratTugasService {
 
         suratTugasRepository.deleteById(id);
     }
+
+    // @Override
+    // public List<SuratTugas> getTugasUntukPegawai(User user) {
+    // return suratTugasRepository.findAll().stream()
+    // .filter(st -> st.getKetuaTim().equals(user) ||
+    // st.getAnggotaTim().contains(user))
+    // .sorted((st1, st2) -> st2.getCreatedAt().compareTo(st1.getCreatedAt()))
+    // .toList();
+    // }
 }

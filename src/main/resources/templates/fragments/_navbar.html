@@ -13,7 +13,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        </li>
+                    </li>
                     <li class="nav-item dropdown" sec:authorize="hasAuthority('ADMIN')">
                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
@@ -46,22 +46,32 @@
                                     Tugas</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item" sec:authorize="hasAuthority('PEGAWAI')">
+                        <a class="nav-link" th:href="@{/pegawai/surat-tugas/list}">Surat Tugas Saya</a>
+                    </li>
 
                 </ul>
-            
-                   <div class="dropdown me-3">
-                    <a href="#" class="text-white" id="notificationBell" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+
+                <div class="dropdown me-3">
+                    <a href="#" class="text-white" id="notificationBell" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
                         <i class="fas fa-bell fs-5 position-relative">
-                            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6em; display: none;">
+                            <span id="notification-badge"
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                style="font-size: 0.6em; display: none;">
                                 9+
                             </span>
                         </i>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-0" aria-labelledby="notificationBell" id="notification-list" style="width: 400px; max-height: 50vh; overflow-y: auto;">
-                        <li><div class="dropdown-item text-center fst-italic">Memuat notifikasi...</div></li>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-0"
+                        aria-labelledby="notificationBell" id="notification-list"
+                        style="width: 400px; max-height: 50vh; overflow-y: auto;">
+                        <li>
+                            <div class="dropdown-item text-center fst-italic">Memuat notifikasi...</div>
+                        </li>
                     </ul>
                 </div>
-                
+
                 <div class="dropdown">
                     <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
                         id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">

@@ -41,7 +41,10 @@ public class SecurityConfig {
                                                 .hasAnyAuthority("KEPALASPI", "SEKRETARIS")
                                                 // SEKRETARIS tetap punya akses ke fitur review-nya
                                                 .requestMatchers("/sekretaris/**").hasAuthority("SEKRETARIS")
-                                                .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI")
+                                                // .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI")
+                                                .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI") // <-- TAMBAHKAN
+                                                                                                        // BARIS INI
+
                                                 .requestMatchers("/dashboard")
                                                 .hasAnyAuthority("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI")
                                                 .anyRequest().authenticated())
