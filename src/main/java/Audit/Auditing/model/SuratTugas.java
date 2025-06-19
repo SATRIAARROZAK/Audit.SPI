@@ -20,8 +20,15 @@ public class SuratTugas {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String tujuan;
+    @Column(nullable = false, unique = true, name = "nomor_surat") // 1. Nomer surat
+    private String nomorSurat;
+
+    @Column(columnDefinition = "TEXT", name = "deskripsi_surat") // 2. Deskripsi surat (opsional, remove nullable=false)
+    private String deskripsiSurat;
+
+    @Enumerated(EnumType.STRING) // 4. Tujuan (form select)
+    @Column(nullable = false, name = "jenis_audit")
+    private JenisAudit jenisAudit; // Use the new enum
 
     @Column(nullable = false, name = "file_path")
     private String filePath; // Path ke file PDF/DOCX yang di-upload
@@ -38,10 +45,10 @@ public class SuratTugas {
     @JoinTable(name = "surat_tugas_anggota", joinColumns = @JoinColumn(name = "surat_tugas_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> anggotaTim;
 
-    @Column(name = "tanggal_mulai_audit")
+    @Column(name = "tanggal_mulai_audit", nullable = false) // 3. set tgl mulai audit (now mandatory from admin)
     private LocalDate tanggalMulaiAudit;
 
-    @Column(name = "tanggal_selesai_audit")
+    @Column(name = "tanggal_selesai_audit", nullable = false) // 3. set tgl selesai audit (now mandatory from admin)
     private LocalDate tanggalSelesaiAudit;
 
     @ManyToOne(fetch = FetchType.LAZY)

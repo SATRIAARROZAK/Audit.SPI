@@ -1,7 +1,7 @@
-// Path: src/main/java/Audit/Auditing/service/SuratTugasServiceImpl.java
 package Audit.Auditing.service;
 
 import Audit.Auditing.dto.SuratTugasDTO;
+import Audit.Auditing.model.JenisAudit; // Import new enum
 import Audit.Auditing.model.StatusSuratTugas;
 import Audit.Auditing.model.SuratTugas;
 import Audit.Auditing.model.SuratTugasHistory;
@@ -47,6 +47,11 @@ public class SuratTugasServiceImpl implements SuratTugasService {
     @Override
     @Transactional
     public void createSuratTugas(SuratTugasDTO dto) {
+        // Check for duplicate nomorSurat
+        if (suratTugasRepository.findByNomorSurat(dto.getNomorSurat()).isPresent()) {
+            throw new IllegalArgumentException("Nomor surat '" + dto.getNomorSurat() + "' sudah ada.");
+        }
+
         String fileName = fileStorageService.storeFile(dto.getSuratFile());
         if (fileName == null) {
             throw new RuntimeException("Gagal menyimpan file.");
@@ -62,18 +67,21 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         Set<User> anggotaTim = new HashSet<>(anggotaList);
 
         SuratTugas suratTugas = new SuratTugas();
-        suratTugas.setTujuan(dto.getTujuan());
+        suratTugas.setNomorSurat(dto.getNomorSurat());
+        suratTugas.setDeskripsiSurat(dto.getDeskripsiSurat()); // Optional, can be null
+        suratTugas.setJenisAudit(dto.getJenisAudit());
         suratTugas.setFilePath(fileName);
         suratTugas.setKetuaTim(ketuaTim);
         suratTugas.setAnggotaTim(anggotaTim);
+        suratTugas.setTanggalMulaiAudit(dto.getTanggalMulaiAudit());
+        suratTugas.setTanggalSelesaiAudit(dto.getTanggalSelesaiAudit());
         suratTugas.setStatus(StatusSuratTugas.BARU);
         suratTugasRepository.save(suratTugas);
 
         List<User> sekretarisUsers = userRepository.findByRole(Role.sekretaris);
         for (User sekretaris : sekretarisUsers) {
-            String message = "Surat tugas baru '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20)
+            String message = "Surat tugas baru '" + StringUtils.abbreviate(suratTugas.getNomorSurat(), 20)
                     + "' perlu direview.";
-            // DIUBAH: Kembali ke halaman review spesifik
             notificationService.createNotification(sekretaris, message,
                     "/sekretaris/surat-tugas/review/" + suratTugas.getId());
         }
@@ -95,6 +103,10 @@ public class SuratTugasServiceImpl implements SuratTugasService {
 
     @Override
     public List<SuratTugas> getSuratByStatus(StatusSuratTugas status) {
+        // When getting for secretary review, also include DIKEMBALIKAN_KE_ADMIN
+        if (status == StatusSuratTugas.BARU) {
+             return suratTugasRepository.findByStatusIn(List.of(StatusSuratTugas.BARU, StatusSuratTugas.DIKEMBALIKAN_KE_ADMIN), Sort.by(Sort.Direction.DESC, "createdAt"));
+        }
         return suratTugasRepository.findByStatus(status, Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 
@@ -104,6 +116,13 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         SuratTugas suratTugas = suratTugasRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Surat Tugas dengan ID " + id + " tidak ditemukan."));
 
+        // Check for duplicate nomorSurat on update, excluding current surat tugas
+        Optional<SuratTugas> existingByNomorSurat = suratTugasRepository.findByNomorSurat(dto.getNomorSurat());
+        if (existingByNomorSurat.isPresent() && !existingByNomorSurat.get().getId().equals(id)) {
+            throw new IllegalArgumentException("Nomor surat '" + dto.getNomorSurat() + "' sudah digunakan oleh surat tugas lain.");
+        }
+
+        // Handle file update: only if a new file is provided
         if (dto.getSuratFile() != null && !dto.getSuratFile().isEmpty()) {
             if (StringUtils.isNotBlank(suratTugas.getFilePath())) {
                 try {
@@ -115,48 +134,88 @@ public class SuratTugasServiceImpl implements SuratTugasService {
             }
             String newFileName = fileStorageService.storeFile(dto.getSuratFile());
             suratTugas.setFilePath(newFileName);
+        } else {
+            // If no new file is uploaded, and the current status is DIKEMBALIKAN_KE_ADMIN or DITOLAK
+            // and there's no existing file path, then it's an error.
+            // But the current request implies if it's REVISED, no re-upload.
+            // If DITOLAK, user implies re-upload.
+            // This logic is tricky. For now, we'll allow updates without file if filePath exists.
+            // If the original file was deleted or never existed and no new one is provided,
+            // the `filePath` field could become null, which might violate `nullable=false` in SuratTugas.
+            // Assuming `filePath` will always exist after initial creation.
+             if (suratTugas.getFilePath() == null || suratTugas.getFilePath().isEmpty()) {
+                 // This case should ideally not happen if it was always required on create.
+                 // If it happens, it means the original file was removed manually or by error.
+                 // For now, let's assume it means a re-upload *is* required if there's no file.
+                 // This condition could be refined based on specific business rules.
+                 // throw new IllegalArgumentException("File surat tugas tidak boleh kosong jika tidak ada file sebelumnya.");
+             }
         }
+
 
         User ketuaTim = userRepository.findById(dto.getKetuaTimId())
                 .orElseThrow(() -> new EntityNotFoundException("Ketua Tim tidak ditemukan"));
 
         List<Long> anggotaIds = dto.getAnggotaTimIds() != null ? dto.getAnggotaTimIds() : Collections.emptyList();
-        Set<User> anggotaTim = new HashSet<>(userRepository.findAllById(anggotaIds));
+        Set<User> anggotaTim = new HashSet<>(anggotaList);
 
-        suratTugas.setTujuan(dto.getTujuan());
+        suratTugas.setNomorSurat(dto.getNomorSurat());
+        suratTugas.setDeskripsiSurat(dto.getDeskripsiSurat());
+        suratTugas.setJenisAudit(dto.getJenisAudit());
         suratTugas.setKetuaTim(ketuaTim);
         suratTugas.setAnggotaTim(anggotaTim);
+        suratTugas.setTanggalMulaiAudit(dto.getTanggalMulaiAudit());
+        suratTugas.setTanggalSelesaiAudit(dto.getTanggalSelesaiAudit());
+
+        // Store the old status to check if it was 'DIKEMBALIKAN_KE_ADMIN'
+        StatusSuratTugas oldStatus = suratTugas.getStatus();
+
+        // When admin revises and saves, status should go back to BARU if it was DIKEMBALIKAN_KE_ADMIN
+        if (oldStatus == StatusSuratTugas.DIKEMBALIKAN_KE_ADMIN) {
+            suratTugas.setStatus(StatusSuratTugas.BARU); // Reset status to BARU for re-review
+        }
 
         suratTugasRepository.save(suratTugas);
+
+        // Send notification to secretary if status was changed from DIKEMBALIKAN_KE_ADMIN
+        if (oldStatus == StatusSuratTugas.DIKEMBALIKAN_KE_ADMIN) {
+            List<User> sekretarisUsers = userRepository.findByRole(Role.sekretaris);
+            String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getNomorSurat(), 20) + "' telah direvisi oleh Admin. Silakan review kembali.";
+            for (User sekretaris : sekretarisUsers) {
+                notificationService.createNotification(sekretaris, message, "/sekretaris/surat-tugas/review/" + suratTugas.getId());
+            }
+        }
+
+        SuratTugasHistory history = new SuratTugasHistory(suratTugas, suratTugas.getStatus(), null,
+                "Surat tugas diperbarui oleh Admin."); // Log update
+        suratTugasHistoryRepository.save(history);
     }
 
     @Override
     @Transactional
-    public void reviewAndSetDates(Long suratId, LocalDate tanggalMulai, LocalDate tanggalSelesai) {
+    public void reviewSuratTugas(Long suratId) { // Simplified method, dates already set by admin
         SuratTugas suratTugas = suratTugasRepository.findById(suratId)
                 .orElseThrow(
                         () -> new EntityNotFoundException("Surat Tugas dengan ID " + suratId + " tidak ditemukan."));
 
-        if (suratTugas.getStatus() != StatusSuratTugas.BARU) {
-            throw new IllegalStateException("Hanya surat dengan status 'BARU' yang dapat direview.");
+        // Allow review from BARU or DIKEMBALIKAN_KE_ADMIN
+        if (suratTugas.getStatus() != StatusSuratTugas.BARU && suratTugas.getStatus() != StatusSuratTugas.DIKEMBALIKAN_KE_ADMIN) {
+            throw new IllegalStateException("Hanya surat dengan status 'Baru Dibuat Admin' atau 'Dikembalikan ke Admin untuk Revisi' yang dapat direview.");
         }
 
-        suratTugas.setTanggalMulaiAudit(tanggalMulai);
-        suratTugas.setTanggalSelesaiAudit(tanggalSelesai);
         suratTugas.setStatus(StatusSuratTugas.REVIEW_SEKRETARIS);
 
         suratTugasRepository.save(suratTugas);
         List<User> kepalaSpiUsers = userRepository.findByRole(Role.kepalaspi);
         for (User kepalaSpi : kepalaSpiUsers) {
-            String message = "Surat tugas '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20)
+            String message = "Surat tugas '" + StringUtils.abbreviate(suratTugas.getNomorSurat(), 20)
                     + "' menunggu persetujuan.";
-            // DIUBAH: Kembali ke halaman persetujuan spesifik
             notificationService.createNotification(kepalaSpi, message,
                     "/kepalaspi/surat-tugas/view/" + suratTugas.getId());
         }
 
         SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.REVIEW_SEKRETARIS, null,
-                "Direview oleh Sekretaris dan jadwal telah ditetapkan.");
+                "Direview oleh Sekretaris dan diteruskan ke Kepala SPI."); // Updated note
         suratTugasHistoryRepository.save(history);
     }
 
@@ -177,7 +236,7 @@ public class SuratTugasServiceImpl implements SuratTugasService {
 
         suratTugasRepository.save(suratTugas);
         List<User> adminUsers = userRepository.findByRole(Role.admin);
-        String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20) + "' telah DISETUJUI.";
+        String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getNomorSurat(), 20) + "' telah DISETUJUI.";
 
         // Notifikasi ke Admin
         for (User admin : adminUsers) {
@@ -220,16 +279,15 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugasRepository.save(suratTugas);
         List<User> adminUsers = userRepository.findByRole(Role.admin);
         List<User> sekretarisUsers = userRepository.findByRole(Role.sekretaris);
-        String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getTujuan(), 20) + "' DITOLAK.";
+        String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getNomorSurat(), 20) + "' DITOLAK.";
         for (User admin : adminUsers) {
-            // DIUBAH: Kembali ke halaman detail untuk admin
             notificationService.createNotification(admin, message, "/admin/surat-tugas/view/" + suratTugas.getId());
         }
         for (User sekretaris : sekretarisUsers) {
-            // DIUBAH: Kembali ke halaman detail (meskipun mungkin perlu penyesuaian hak
-            // akses)
+            // Sekretaris sees it in review list again, but it's DITOLAK.
+            // Consider changing this link if sekretaris should go to a special "rejected" view.
             notificationService.createNotification(sekretaris, message,
-                    "/admin/surat-tugas/view/" + suratTugas.getId());
+                    "/sekretaris/surat-tugas/review/" + suratTugas.getId());
         }
 
         SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DITOLAK, approver, catatan);
@@ -255,12 +313,30 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         suratTugasRepository.deleteById(id);
     }
 
-    // @Override
-    // public List<SuratTugas> getTugasUntukPegawai(User user) {
-    // return suratTugasRepository.findAll().stream()
-    // .filter(st -> st.getKetuaTim().equals(user) ||
-    // st.getAnggotaTim().contains(user))
-    // .sorted((st1, st2) -> st2.getCreatedAt().compareTo(st1.getCreatedAt()))
-    // .toList();
-    // }
+    @Override
+    @Transactional
+    public void returnSuratTugasForRevision(Long suratId, String catatan, User secretary) {
+        SuratTugas suratTugas = suratTugasRepository.findById(suratId)
+                .orElseThrow(() -> new EntityNotFoundException("Surat Tugas tidak ditemukan."));
+
+        // Allow returning for revision only if it's currently BARU or under secretary review (REVIEW_SEKRETARIS)
+        if (suratTugas.getStatus() != StatusSuratTugas.BARU && suratTugas.getStatus() != StatusSuratTugas.REVIEW_SEKRETARIS) {
+            throw new IllegalStateException("Surat tugas tidak dalam status yang bisa direvisi oleh Sekretaris.");
+        }
+
+        suratTugas.setStatus(StatusSuratTugas.DIKEMBALIKAN_KE_ADMIN);
+        suratTugas.setCatatanPersetujuan(catatan); // Use catatanPersetujuan to store revision notes
+
+        suratTugasRepository.save(suratTugas);
+
+        // Notify Admin
+        List<User> adminUsers = userRepository.findByRole(Role.admin);
+        String message = "Surat Tugas '" + StringUtils.abbreviate(suratTugas.getNomorSurat(), 20) + "' dikembalikan untuk revisi: " + StringUtils.abbreviate(catatan, 50);
+        for (User admin : adminUsers) {
+            notificationService.createNotification(admin, message, "/admin/surat-tugas/edit/" + suratTugas.getId());
+        }
+
+        SuratTugasHistory history = new SuratTugasHistory(suratTugas, StatusSuratTugas.DIKEMBALIKAN_KE_ADMIN, secretary, catatan);
+        suratTugasHistoryRepository.save(history);
+    }
 }

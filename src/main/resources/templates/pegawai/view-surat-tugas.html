@@ -17,12 +17,20 @@
                         <table class="table table-bordered table-striped">
                             <tbody>
                                 <tr>
-                                    <th style="width: 25%;">Tujuan Audit</th>
-                                    <td th:text="${surat.tujuan}"></td>
+                                    <th style="width: 25%;">Nomor Surat</th>
+                                    <td th:text="${surat.nomorSurat}"></td>
+                                </tr>
+                                <tr>
+                                    <th>Deskripsi Surat</th>
+                                    <td th:text="${surat.deskripsiSurat ?: '-'}"></td>
+                                </tr>
+                                <tr>
+                                    <th>Jenis Audit</th>
+                                    <td th:text="${surat.jenisAudit.displayName}"></td>
                                 </tr>
                                 <tr>
                                     <th>Jadwal Audit</th>
-                                    <td th:text="${#temporals.format(surat.tanggalMulaiAudit, 'dd MMMM yyyy')} + ' s/d ' + ${#temporals.format(surat.tanggalSelesaiAudit, 'dd MMMM yyyy')}">
+                                    <td th:text="${#temporals.format(surat.tanggalMulaiAudit, 'dd MMMM隷')} + ' s/d ' + ${#temporals.format(surat.tanggalSelesaiAudit, 'dd MMMM隷')}">
                                     </td>
                                 </tr>
                                 <tr>

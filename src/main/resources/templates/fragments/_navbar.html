@@ -1,4 +1,3 @@
-// Path: src/main/resources/templates/fragments/_navbar.html
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
@@ -48,6 +47,17 @@
                     </li>
                     <li class="nav-item" sec:authorize="hasAuthority('PEGAWAI')">
                         <a class="nav-link" th:href="@{/pegawai/surat-tugas/list}">Surat Tugas Saya</a>
+                    </li>
+
+                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('ADMIN', 'KEPALASPI', 'SEKRETARIS', 'PEGAWAI')">
+                        <a class="nav-link dropdown-toggle" href="#" id="auditDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Audit
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="auditDropdown">
+                            <li><a class="dropdown-item" th:href="@{/audit/rencana}">Rencana Audit</a></li>
+                            <li><a class="dropdown-item" th:href="@{/audit/review}">Rencana Review Audit</a></li>
+                        </ul>
                     </li>
 
                 </ul>

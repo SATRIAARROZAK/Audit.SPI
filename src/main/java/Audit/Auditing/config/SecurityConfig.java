@@ -44,10 +44,15 @@ public class SecurityConfig {
                                                 // .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI")
                                                 .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI") // <-- TAMBAHKAN
                                                                                                         // BARIS INI
+                                                .requestMatchers("/audit/**")
+                                                .hasAnyAuthority("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI") // Tambahkan
+                                                                                                                // baris
+                                                                                                                // ini
 
                                                 .requestMatchers("/dashboard")
                                                 .hasAnyAuthority("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI")
                                                 .anyRequest().authenticated())
+
                                 .formLogin(formLogin -> formLogin
                                                 .loginPage("/login")
                                                 .loginProcessingUrl("/perform_login")

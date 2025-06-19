@@ -11,22 +11,34 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h2>Detail Surat Tugas</h2>
-                        <span class="badge bg-primary fs-6" th:text="${surat.status.displayName}"></span>
+                        <span class="badge bg-primary fs-6" 
+                            th:classappend="${surat.status.name() == 'DITOLAK' ? 'bg-danger' : 
+                                            (surat.status.name() == 'DIKEMBALIKAN_KE_ADMIN' ? 'bg-warning text-dark' : 'bg-primary')}"
+                            th:text="${surat.status.displayName}"></span>
                     </div>
                     <div class="card-body">
                         <table class="table table-bordered">
                             <tbody>
-                                <!-- <tr>
-                                    <th style="width: 30%;">ID Surat</th>
-                                    <td th:text="${surat.id}"></td>
-                                </tr> -->
                                 <tr>
-                                    <th>Tujuan Audit</th>
-                                    <td th:text="${surat.tujuan}"></td>
+                                    <th>Nomor Surat</th>
+                                    <td th:text="${surat.nomorSurat}"></td>
+                                </tr>
+                                <tr>
+                                    <th>Deskripsi Surat</th>
+                                    <td th:text="${surat.deskripsiSurat ?: '-'}"></td>
+                                </tr>
+                                <tr>
+                                    <th>Jenis Audit</th>
+                                    <td th:text="${surat.jenisAudit.displayName}"></td>
+                                </tr>
+                                <tr>
+                                    <th>Jadwal Audit</th>
+                                    <td th:text="${#temporals.format(surat.tanggalMulaiAudit, 'dd MMMM YYYY')} + ' s/d ' + ${#temporals.format(surat.tanggalSelesaiAudit, 'dd MMMM YYYY')}">
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th>Tanggal Diupload</th>
-                                    <td th:text="${#temporals.format(surat.createdAt, 'dd MMMM yyyy, HH:mm')}"></td>
+                                    <td th:text="${#temporals.format(surat.createdAt, 'dd MMMM YYYY, HH:mm')}"></td>
                                 </tr>
 
                                 <tr>
@@ -42,9 +54,11 @@
                                         </ol>
                                     </td>
                                 </tr>
-                                <tr th:if="${surat.status.name() == 'DITOLAK'}">
-                                    <th class="text-danger">Alasan Penolakan</th>
-                                    <td class="text-danger" th:text="${surat.catatanPersetujuan}"></td>
+                                <tr th:if="${surat.status.name() == 'DITOLAK' || surat.status.name() == 'DIKEMBALIKAN_KE_ADMIN'}">
+                                    <th th:classappend="${surat.status.name() == 'DITOLAK' ? 'text-danger' : 'text-warning'}">
+                                        <span th:text="${surat.status.name() == 'DITOLAK' ? 'Alasan Penolakan' : 'Catatan Revisi'}"></span>
+                                    </th>
+                                    <td th:classappend="${surat.status.name() == 'DITOLAK' ? 'text-danger' : 'text-dark'}" th:text="${surat.catatanPersetujuan}"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -65,7 +79,7 @@
                             <li th:each="hist : ${history}" class="list-group-item">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1" th:text="${hist.status.displayName}"></h5>
-                                    <small th:text="${#temporals.format(hist.timestamp, 'dd MMM yyyy HH:mm')}"></small>
+                                    <small th:text="${#temporals.format(hist.timestamp, 'dd/MM/YYYY HH:mm')}"></small>
                                 </div>
                                 <p class="mb-1" th:text="${hist.notes}"></p>
                                 <small class="text-muted" th:if="${hist.actor}"
@@ -91,11 +105,6 @@
                     <div th:unless="${isPdf}">
                         <img th:src="@{${fileUrl}}" class="img-fluid" alt="Preview File" />
                     </div>
-                    <!-- <div class="card-body" style="height: 120vh;">
-                        <div class="card-body" style="height: 120vh; overflow-y: auto;">
-                            
-                        </div>
-                    </div> -->
                 </div>
             </div>
         </div>

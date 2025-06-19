@@ -1,11 +1,12 @@
 package Audit.Auditing.model;
 
 public enum StatusSuratTugas {
-    BARU("Baru Dibuat Admin"),
-    REVIEW_SEKRETARIS("Review Sekretaris"),
-    PERSETUJUAN_KEPALASPI("Persetujuan Kepala SPI"),
-    DISETUJUI("Disetujui"),
-    DITOLAK("Ditolak"),
+    BARU("pending"),
+    REVIEW_SEKRETARIS("review"),
+    PERSETUJUAN_KEPALASPI("pending approval"),
+    DISETUJUI("disetujui"),
+    DITOLAK("ditolak"),
+    DIKEMBALIKAN_KE_ADMIN("revisi"), // New status
     SELESAI("Selesai");
 
     private final String displayName;

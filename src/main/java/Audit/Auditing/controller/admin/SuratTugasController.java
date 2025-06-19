@@ -5,6 +5,8 @@ import Audit.Auditing.model.Role;
 import Audit.Auditing.model.SuratTugas;
 import Audit.Auditing.model.SuratTugasHistory;
 import Audit.Auditing.model.User;
+import Audit.Auditing.model.JenisAudit; // Import new enum
+import Audit.Auditing.model.StatusSuratTugas; // Import status enum
 import Audit.Auditing.repository.UserRepository;
 import Audit.Auditing.repository.SuratTugasHistoryRepository;
 import Audit.Auditing.service.SuratTugasService;
@@ -23,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.time.LocalDate; // Import LocalDate
 
 @Controller
 @RequestMapping("/admin/surat-tugas")
@@ -40,23 +43,26 @@ public class SuratTugasController {
     public String listSuratTugas(Model model) {
         List<SuratTugas> listSurat = suratTugasService.getAllSuratTugas();
         model.addAttribute("listSurat", listSurat);
+        // Pass StatusSuratTugas enum to the view for dynamic styling/text based on status
+        model.addAttribute("T(Audit.Auditing.model.StatusSuratTugas)", StatusSuratTugas.class);
         return "admin/list-surat-tugas";
     }
 
     // Menampilkan form upload
     @GetMapping("/new")
     public String showCreateForm(Model model) {
-        // Ambil hanya user dengan role PEGAWAI
         List<User> pegawai = userRepository.findByRole(Role.pegawai);
 
         model.addAttribute("suratTugasDTO", new SuratTugasDTO());
         model.addAttribute("pegawai", pegawai);
+        model.addAttribute("jenisAuditOptions", JenisAudit.values()); // Pass enum values to view
+        model.addAttribute("currentDate", LocalDate.now()); // For setting default date
         return "admin/form-surat-tugas";
     }
 
     // Memproses data dari form
     @PostMapping("/save")
-    public String createSuratTugas(@Validated @ModelAttribute("suratTugasDTO") SuratTugasDTO suratTugasDTO,
+    public String createSuratTugas(@Validated(SuratTugasDTO.Create.class) @ModelAttribute("suratTugasDTO") SuratTugasDTO suratTugasDTO,
             BindingResult result,
             Model model,
             RedirectAttributes redirectAttributes) {
@@ -66,20 +72,38 @@ public class SuratTugasController {
                     "Ketua tim tidak boleh menjadi anggota tim juga.");
         }
 
+        // Add date validation
+        if (suratTugasDTO.getTanggalSelesaiAudit() != null && suratTugasDTO.getTanggalMulaiAudit() != null) {
+            if (suratTugasDTO.getTanggalSelesaiAudit().isBefore(suratTugasDTO.getTanggalMulaiAudit())) {
+                result.rejectValue("tanggalSelesaiAudit", "date.invalid", "Tanggal selesai audit tidak boleh sebelum tanggal mulai.");
+            }
+        }
+
+
         if (result.hasErrors()) {
             List<User> pegawai = userRepository.findByRole(Role.pegawai);
             model.addAttribute("pegawai", pegawai);
+            model.addAttribute("jenisAuditOptions", JenisAudit.values()); // Re-add for error case
+            model.addAttribute("currentDate", LocalDate.now());
             return "admin/form-surat-tugas";
         }
 
         try {
             suratTugasService.createSuratTugas(suratTugasDTO);
             redirectAttributes.addFlashAttribute("successMessage", "Surat tugas berhasil dibuat!");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) { // Catch specific exception for duplicate nomorSurat
+            result.rejectValue("nomorSurat", "nomorSurat.exists", e.getMessage());
+            List<User> pegawai = userRepository.findByRole(Role.pegawai);
+            model.addAttribute("pegawai", pegawai);
+            model.addAttribute("jenisAuditOptions", JenisAudit.values()); // Re-add for error case
+            model.addAttribute("currentDate", LocalDate.now());
+            return "admin/form-surat-tugas";
+        }
+        catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Gagal membuat surat tugas: " + e.getMessage());
         }
 
-        return "redirect:/admin/surat-tugas/list"; // Arahkan ke halaman list (akan dibuat nanti)
+        return "redirect:/admin/surat-tugas/list";
     }
 
     // GET - Tampilkan halaman detail
@@ -94,13 +118,13 @@ public class SuratTugasController {
         List<SuratTugasHistory> history = suratTugasHistoryRepository.findBySuratTugasIdOrderByTimestampAsc(id);
         String filePath = surat.getFilePath();
 
-        // --- TAMBAHKAN LOGIKA INI ---
         boolean isPdf = filePath != null && filePath.toLowerCase().endsWith(".pdf");
         
         model.addAttribute("surat", surat);
         model.addAttribute("history", history);
         model.addAttribute("fileUrl", "/profile-photos/" + filePath);
-        model.addAttribute("isPdf", isPdf); // Kirim flag isPdf ke view
+        model.addAttribute("isPdf", isPdf);
+        model.addAttribute("T(Audit.Auditing.model.StatusSuratTugas)", StatusSuratTugas.class); // Pass Status enum
         
         return "admin/view-surat-tugas";
     }
@@ -117,7 +141,11 @@ public class SuratTugasController {
         SuratTugas surat = suratOpt.get();
         // Konversi dari Entity ke DTO untuk form
         SuratTugasDTO dto = new SuratTugasDTO();
-        dto.setTujuan(surat.getTujuan());
+        dto.setNomorSurat(surat.getNomorSurat()); // New field
+        dto.setDeskripsiSurat(surat.getDeskripsiSurat()); // Renamed
+        dto.setJenisAudit(surat.getJenisAudit()); // New field
+        dto.setTanggalMulaiAudit(surat.getTanggalMulaiAudit());
+        dto.setTanggalSelesaiAudit(surat.getTanggalSelesaiAudit());
         dto.setKetuaTimId(surat.getKetuaTim().getId());
         dto.setAnggotaTimIds(surat.getAnggotaTim().stream().map(User::getId).collect(Collectors.toList()));
 
@@ -126,6 +154,10 @@ public class SuratTugasController {
         model.addAttribute("suratTugasDTO", dto);
         model.addAttribute("pegawai", pegawai);
         model.addAttribute("suratId", id);
+        model.addAttribute("jenisAuditOptions", JenisAudit.values()); // Pass enum values to view
+        model.addAttribute("currentDate", LocalDate.now()); // For setting default date
+        model.addAttribute("surat", surat); // Pass surat object for status/notes display
+        model.addAttribute("T(Audit.Auditing.model.StatusSuratTugas)", StatusSuratTugas.class); // Pass Status enum
         return "admin/form-surat-tugas-edit";
     }
 
@@ -141,17 +173,41 @@ public class SuratTugasController {
                     "Ketua tim tidak boleh menjadi anggota tim juga.");
         }
 
+        // Add date validation
+        if (suratTugasDTO.getTanggalSelesaiAudit() != null && suratTugasDTO.getTanggalMulaiAudit() != null) {
+            if (suratTugasDTO.getTanggalSelesaiAudit().isBefore(suratTugasDTO.getTanggalMulaiAudit())) {
+                result.rejectValue("tanggalSelesaiAudit", "date.invalid", "Tanggal selesai audit tidak boleh sebelum tanggal mulai.");
+            }
+        }
+
         if (result.hasErrors()) {
             List<User> pegawai = userRepository.findByRole(Role.pegawai);
             model.addAttribute("pegawai", pegawai);
             model.addAttribute("suratId", id);
+            model.addAttribute("jenisAuditOptions", JenisAudit.values()); // Re-add for error case
+            model.addAttribute("currentDate", LocalDate.now());
+            // Re-fetch surat object for status/notes display
+            suratTugasService.getSuratTugasById(id).ifPresent(s -> model.addAttribute("surat", s));
+            model.addAttribute("T(Audit.Auditing.model.StatusSuratTugas)", StatusSuratTugas.class); // Pass Status enum
             return "admin/form-surat-tugas-edit";
         }
 
         try {
             suratTugasService.updateSuratTugas(id, suratTugasDTO);
             ra.addFlashAttribute("successMessage", "Surat tugas berhasil diupdate!");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) { // Catch specific exception for duplicate nomorSurat
+            result.rejectValue("nomorSurat", "nomorSurat.exists", e.getMessage());
+            List<User> pegawai = userRepository.findByRole(Role.pegawai);
+            model.addAttribute("pegawai", pegawai);
+            model.addAttribute("suratId", id);
+            model.addAttribute("jenisAuditOptions", JenisAudit.values()); // Re-add for error case
+            model.addAttribute("currentDate", LocalDate.now());
+            // Re-fetch surat object for status/notes display
+            suratTugasService.getSuratTugasById(id).ifPresent(s -> model.addAttribute("surat", s));
+            model.addAttribute("T(Audit.Auditing.model.StatusSuratTugas)", StatusSuratTugas.class); // Pass Status enum
+            return "admin/form-surat-tugas-edit";
+        }
+        catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Gagal mengupdate surat tugas: " + e.getMessage());
         }
         return "redirect:/admin/surat-tugas/list";

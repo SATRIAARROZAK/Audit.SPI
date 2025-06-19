@@ -11,17 +11,47 @@
                 <div class="card">
                     <div class="card-header">
                         <h2>Form Edit Surat Tugas</h2>
+                        <span th:if="${surat.status == T(Audit.Auditing.model.StatusSuratTugas).DIKEMBALIKAN_KE_ADMIN}" class="badge bg-warning text-dark mt-2">
+                            Surat ini dikembalikan untuk revisi. Catatan: <span th:text="${surat.catatanPersetujuan}"></span>
+                        </span>
+                        <span th:if="${surat.status == T(Audit.Auditing.model.StatusSuratTugas).DITOLAK}" class="badge bg-danger mt-2">
+                            Surat ini DITOLAK. Catatan: <span th:text="${surat.catatanPersetujuan}"></span>
+                        </span>
                     </div>
                     <div class="card-body">
                         <form th:action="@{/admin/surat-tugas/update/{id}(id=${suratId})}" th:object="${suratTugasDTO}"
                             method="post" enctype="multipart/form-data">
 
                             <div class="mb-3">
-                                <label for="tujuan" class="form-label">Tujuan Audit:</label>
-                                <textarea id="tujuan" class="form-control" rows="3" th:field="*{tujuan}"
-                                    required></textarea>
-                                <div th:if="${#fields.hasErrors('tujuan')}" th:errors="*{tujuan}"
-                                    class="text-danger small mt-1"></div>
+                                <label for="nomorSurat" class="form-label">Nomor Surat:</label>
+                                <input type="text" id="nomorSurat" class="form-control" th:field="*{nomorSurat}" required />
+                                <div th:if="${#fields.hasErrors('nomorSurat')}" th:errors="*{nomorSurat}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="deskripsiSurat" class="form-label">Deskripsi Surat (Opsional):</label>
+                                <textarea id="deskripsiSurat" class="form-control" rows="3" th:field="*{deskripsiSurat}"></textarea>
+                                <div th:if="${#fields.hasErrors('deskripsiSurat')}" th:errors="*{deskripsiSurat}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="jenisAudit" class="form-label">Jenis Audit:</label>
+                                <select id="jenisAudit" class="form-select" th:field="*{jenisAudit}" required>
+                                    <option value="">Pilih Jenis Audit</option>
+                                    <option th:each="jenis : ${jenisAuditOptions}" th:value="${jenis}" th:text="${jenis.displayName}"></option>
+                                </select>
+                                <div th:if="${#fields.hasErrors('jenisAudit')}" th:errors="*{jenisAudit}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="tanggalMulaiAudit" class="form-label">Tanggal Mulai Audit:</label>
+                                <input type="date" class="form-control" id="tanggalMulaiAudit" name="tanggalMulaiAudit" th:field="*{tanggalMulaiAudit}" required>
+                                <div th:if="${#fields.hasErrors('tanggalMulaiAudit')}" th:errors="*{tanggalMulaiAudit}" class="text-danger small mt-1"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tanggalSelesaiAudit" class="form-label">Tanggal Selesai Audit:</label>
+                                <input type="date" class="form-control" id="tanggalSelesaiAudit" name="tanggalSelesaiAudit" th:field="*{tanggalSelesaiAudit}" required>
+                                <div th:if="${#fields.hasErrors('tanggalSelesaiAudit')}" th:errors="*{tanggalSelesaiAudit}" class="text-danger small mt-1"></div>
                             </div>
 
                             <div class="mb-3">
@@ -32,6 +62,9 @@
                                     surat.</small>
                                 <div th:if="${#fields.hasErrors('suratFile')}" th:errors="*{suratFile}"
                                     class="text-danger small mt-1"></div>
+                                <div th:if="${surat.filePath != null}" class="mt-2">
+                                    File saat ini: <a th:href="@{'/profile-photos/' + ${surat.filePath}}" target="_blank">Lihat File</a>
+                                </div>
                             </div>
 
                             <div class="mb-3">

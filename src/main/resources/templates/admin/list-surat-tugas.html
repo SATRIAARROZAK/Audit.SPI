@@ -18,7 +18,10 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>No</th>
-                                <th>Tujuan</th>
+                                <th>Nomor Surat</th>
+                                <th>Deskripsi Surat</th>
+                                <th>Jenis Audit</th>
+                                <th>Jadwal Audit</th>
                                 <th>Ketua Tim</th>
                                 <th>Status</th>
                                 <th>Tanggal Upload</th>
@@ -28,29 +31,33 @@
                         <tbody>
                             <tr th:each="surat, iterStat : ${listSurat}">
                                 <td th:text="${iterStat.count}"></td>
-                                <td th:text="${#strings.abbreviate(surat.tujuan, 50)}"></td>
+                                <td th:text="${surat.nomorSurat}"></td>
+                                <td th:text="${#strings.abbreviate(surat.deskripsiSurat ?: '-', 50)}"></td>
+                                <td th:text="${surat.jenisAudit.displayName}"></td>
+                                <td th:text="${#temporals.format(surat.tanggalMulaiAudit, 'dd/MM/yy')} + ' - ' + ${#temporals.format(surat.tanggalSelesaiAudit, 'dd/MM/yy')}"></td>
                                 <td th:text="${surat.ketuaTim.fullName ?: surat.ketuaTim.username}"></td>
                                 <td>
                                     <span class="badge"
-                                        th:classappend="${surat.status.name() == 'DITOLAK' ? 'bg-danger' : 'bg-primary'}"
+                                        th:classappend="${surat.status.name() == 'DITOLAK' ? 'bg-danger' : 
+                                                        (surat.status.name() == 'DIKEMBALIKAN_KE_ADMIN' ? 'bg-warning text-dark' : 'bg-primary')}"
                                         th:text="${surat.status.displayName}"></span>
-                                    <a href="#" th:if="${surat.status.name() == 'DITOLAK'}" class="text-info ms-2"
+                                    <a href="#" th:if="${surat.status.name() == 'DITOLAK' || surat.status.name() == 'DIKEMBALIKAN_KE_ADMIN'}" class="text-info ms-2"
                                         data-bs-toggle="modal" th:data-bs-target="'#noteModal-' + ${surat.id}"
-                                        title="Lihat Catatan Penolakan">
+                                        title="Lihat Catatan">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </td>
-                                <div th:each="surat : ${listSurat}" class="modal fade"
-                                    th:id="'noteModal-' + ${surat.id}" tabindex="-1" aria-labelledby="noteModalLabel"
+                                <div th:each="s : ${listSurat}" class="modal fade"
+                                    th:id="'noteModal-' + ${s.id}" tabindex="-1" aria-labelledby="noteModalLabel"
                                     aria-hidden="true">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
                                             <div class="modal-header">
-                                                <h5 class="modal-title" id="noteModalLabel">Catatan Penolakan</h5>
+                                                <h5 class="modal-title" id="noteModalLabel" th:text="${s.status.name() == 'DITOLAK' ? 'Alasan Penolakan' : 'Catatan Revisi'}">Catatan</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                     aria-label="Close"></button>
                                             </div>
-                                            <div class="modal-body" th:text="${surat.catatanPersetujuan}">
+                                            <div class="modal-body" th:text="${s.catatanPersetujuan}">
                                                 ...
                                             </div>
                                             <div class="modal-footer">
@@ -60,7 +67,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <td th:text="${#temporals.format(surat.createdAt, 'dd MMMM yyyy HH:mm')}"></td>
+                                <!-- <td th:text="${#temporals.format(surat.createdAt, 'dd MMMM YYYY HH:mm')}"></td> -->
+                                 <td th:text="${#temporals.format(surat.createdAt, 'dd MMMM YYYY')}"></td>
                                 <td>
                                     <a th:href="@{/admin/surat-tugas/view/{id}(id=${surat.id})}"
                                         class="btn btn-outline-info" title="Lihat Detail">
@@ -80,7 +88,7 @@
                                 </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(listSurat)}">
-                                <td colspan="6" class="text-center">Belum ada surat tugas yang dibuat.</td>
+                                <td colspan="9" class="text-center">Belum ada surat tugas yang dibuat.</td>
                             </tr>
                         </tbody>
                     </table>
