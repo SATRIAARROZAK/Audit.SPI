@@ -11,11 +11,19 @@
         <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
         <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
         <a th:href="@{/admin/surat-tugas/new}" class="btn btn-primary mb-3">Upload Surat Tugas</a>
+
+        <form th:action="@{/admin/surat-tugas/list}" method="get" class="mb-3 d-flex">
+            <input type="text" name="keyword" class="form-control me-2 w-25" placeholder="Cari surat tugas..."
+                   th:value="${keyword}" aria-label="Search" />
+            <button type="submit" class="btn btn-outline-secondary">Cari</button>
+            <a th:href="@{/admin/surat-tugas/list}" class="btn btn-outline-secondary ms-2">Reset</a>
+        </form>
+
         <div class="card">
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
+                    <table class="table table-striped table-hover" id="suratTugasTable">
+                        <thead class="table-dark" style="position: sticky; top: 0; background-color: #343a40; z-index: 1;">
                             <tr>
                                 <th>No</th>
                                 <th>Nomor Surat</th>
@@ -30,7 +38,7 @@
                         </thead>
                         <tbody>
                             <tr th:each="surat, iterStat : ${listSurat}">
-                                <td th:text="${iterStat.count}"></td>
+                                <td th:text="${(currentPage * pageSize) + iterStat.count}"></td>
                                 <td th:text="${surat.nomorSurat}"></td>
                                 <td th:text="${#strings.abbreviate(surat.deskripsiSurat ?: '-', 50)}"></td>
                                 <td th:text="${surat.jenisAudit.displayName}"></td>
@@ -67,8 +75,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- <td th:text="${#temporals.format(surat.createdAt, 'dd MMMM YYYY HH:mm')}"></td> -->
-                                 <td th:text="${#temporals.format(surat.createdAt, 'dd MMMM YYYY')}"></td>
+                                <td th:text="${#temporals.format(surat.createdAt, 'dd MMMMyyyy')}"></td>
                                 <td>
                                     <a th:href="@{/admin/surat-tugas/view/{id}(id=${surat.id})}"
                                         class="btn btn-outline-info" title="Lihat Detail">
@@ -93,6 +100,20 @@
                         </tbody>
                     </table>
                 </div>
+
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                            <a class="page-link" th:href="@{/admin/surat-tugas/list(page=${currentPage - 1}, size=${pageSize}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword})}">Previous</a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == currentPage ? 'active' : ''}">
+                            <a class="page-link" th:href="@{/admin/surat-tugas/list(page=${i}, size=${pageSize}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword})}" th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage + 1 == totalPages ? 'disabled' : ''}">
+                            <a class="page-link" th:href="@{/admin/surat-tugas/list(page=${currentPage + 1}, size=${pageSize}, sortBy=${sortBy}, sortDir=${sortDir}, keyword=${keyword})}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </main>

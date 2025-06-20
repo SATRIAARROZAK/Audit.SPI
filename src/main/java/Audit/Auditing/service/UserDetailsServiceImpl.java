@@ -8,6 +8,8 @@ import Audit.Auditing.model.User;
 import Audit.Auditing.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -35,7 +37,6 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
         User user = userRepository.findByUsernameOrEmail(username, username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username or email: " + username));
         
-        // Gunakan CustomUserDetails
         return new CustomUserDetails(user);
     }
 
@@ -44,12 +45,11 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
         User user = new User();
         user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());
-        user.setPassword(passwordEncoder.encode(userDto.getPassword())); // Enkripsi password
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
 
-        // PERBAIKAN: Mengubah role menjadi lowercase agar cocok dengan nama Enum
-        String roleStr = userDto.getRole().toLowerCase(); // Sebelumnya .toUpperCase()
+        String roleStr = userDto.getRole().toLowerCase();
         user.setRole(Role.valueOf(roleStr));
-        user.setEnabled(true); // Default user aktif
+        user.setEnabled(true);
         return userRepository.save(user);
     }
 
@@ -69,6 +69,24 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
+    public Page<User> findAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
+    @Override
+    public Page<User> searchUsers(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return userRepository.findAll(pageable);
+        }
+        // Assuming you add a search method to UserRepository, e.g.:
+        // @Query("SELECT u FROM User u WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+        // Page<User> searchUsers(@Param("keyword") String keyword, Pageable pageable);
+        // For simplicity, for now, if no specific search method for users, you might fetch all and filter in memory (not ideal for large datasets)
+        // or add the @Query as shown above to your UserRepository.
+        return userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrFullNameContainingIgnoreCase(keyword, keyword, keyword, pageable);
+    }
+
+    @Override
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
@@ -81,12 +99,10 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
         user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());
 
-        // LOGIKA INI SUDAH BENAR: hanya update jika password diisi
         if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         }
 
-        // Pastikan ini menggunakan toLowerCase() untuk role
         user.setRole(Role.valueOf(userDto.getRole().toLowerCase()));
 
         return userRepository.save(user);
@@ -100,25 +116,21 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
         userRepository.deleteById(id);
     }
 
-     @Override
+    @Override
     @Transactional
     public User updateProfile(String username, ProfileDto profileDto) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
 
-        // Simpan foto jika ada yang diunggah
         if (profileDto.getPhoto() != null && !profileDto.getPhoto().isEmpty()) {
             String fileName = fileStorageService.storeFile(profileDto.getPhoto());
             user.setPhotoPath(fileName);
         }
 
-        // Simpan tanda tangan jika ada yang diunggah
         if (profileDto.getSignatureImage() != null && !profileDto.getSignatureImage().isEmpty()) {
             String fileName = fileStorageService.storeFile(profileDto.getSignatureImage());
             user.setSignaturePath(fileName);
-        } 
-        // Simpan tanda tangan dari canvas jika tidak ada file yang diunggah
-        else if (profileDto.getSignatureDataUrl() != null && !profileDto.getSignatureDataUrl().isEmpty()) {
+        } else if (profileDto.getSignatureDataUrl() != null && !profileDto.getSignatureDataUrl().isEmpty()) {
             String fileName = fileStorageService.storeBase64File(profileDto.getSignatureDataUrl());
             user.setSignaturePath(fileName);
         }
@@ -127,7 +139,7 @@ public class UserDetailsServiceImpl implements UserService, UserDetailsService {
         user.setPosition(profileDto.getPosition());
         user.setPhoneNumber(profileDto.getPhoneNumber());
         user.setAddress(profileDto.getAddress());
-        user.setProfileComplete(true); // Tandai profil sebagai lengkap
+        user.setProfileComplete(true);
 
         return userRepository.save(user);
     }
