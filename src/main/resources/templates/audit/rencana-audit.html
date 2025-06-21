@@ -11,12 +11,12 @@
         <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
         <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
-        <!-- <form th:action="@{/audit/rencana}" method="get" class="mb-3 d-flex">
+        <form th:action="@{/audit/rencana}" method="get" class="mb-3 d-flex">
             <input type="text" name="keyword" class="form-control me-2" placeholder="Cari rencana audit..."
                    th:value="${keyword}" aria-label="Search" />
             <button type="submit" class="btn btn-outline-secondary">Cari</button>
             <a th:href="@{/audit/rencana}" class="btn btn-outline-secondary ms-2">Reset</a>
-        </form> -->
+        </form>
 
         <div class="card">
             <div class="card-body">
@@ -27,6 +27,7 @@
                                 <th>No</th>
                                 <th>Nomor Surat</th>
                                 <th>Jadwal Audit</th>
+                                <th>Ketua Tim</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -34,10 +35,8 @@
                             <tr th:each="surat, iterStat : ${listSurat}">
                                 <td th:text="${(currentPage * pageSize) + iterStat.count}"></td>
                                 <td th:text="${surat.nomorSurat}"></td>
-                                <td
-                                    th:text="${#temporals.format(surat.tanggalMulaiAudit, 'dd/MM/yyyy')} + ' - ' + ${#temporals.format(surat.tanggalSelesaiAudit, 'dd/MM/yyyy')}">
-                                </td>
-                                <td>
+                                <td th:text="${#temporals.format(surat.tanggalMulaiAudit, 'dd/MM/yyyy')} + ' - ' + ${#temporals.format(surat.tanggalSelesaiAudit, 'dd/MM/yyyy')}"></td>
+                                <td th:text="${surat.ketuaTim?.fullName ?: surat.ketuaTim?.username ?: '-'}"></td> <td>
                                     <div class="dropdown">
                                         <button class="btn btn-secondary" type="button"
                                             id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -45,8 +44,13 @@
                                         </button>
                                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                             <li>
-                                                <a class="dropdown-item" href="#" title="Buat Kertas Kerja">
-                                                    <i class="fas fa-file-alt me-1"></i> Buat Kertas Kerja
+                                                <a class="dropdown-item" href="#" title="Lihat Detail">
+                                                    <i class="fas fa-eye me-1"></i> Lihat Detail
+                                                </a>
+                                            </li>
+                                            <li th:if="${currentUser != null and surat.ketuaTim != null and surat.ketuaTim.id == currentUser.id}">
+                                                <a class="dropdown-item" th:href="@{/audit/kertas-kerja/new/{id}(id=${surat.id})}" title="Buat Kertas Kerja">
+                                                    <i class="fas fa-file-alt me-1"></i> Halaman Kertas Kerja
                                                 </a>
                                             </li>
                                             <li>
@@ -59,8 +63,7 @@
                                 </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(listSurat)}">
-                                <td colspan="4" class="text-center">Tidak ada rencana audit yang disetujui untuk Anda.
-                                </td>
+                                <td colspan="5" class="text-center">Tidak ada rencana audit yang disetujui untuk Anda sebagai ketua tim.</td>
                             </tr>
                         </tbody>
                     </table>

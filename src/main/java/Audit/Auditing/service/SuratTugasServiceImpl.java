@@ -276,15 +276,28 @@ public class SuratTugasServiceImpl implements SuratTugasService {
         return suratTugasRepository.findTugasForUserByStatus(user, StatusSuratTugas.DISETUJUI, pageable); //
     }
 
-    // Di dalam class SuratTugasServiceImpl
+    // Implementation for the new method to get tasks specifically for a Ketua Tim
     @Override
     public Page<SuratTugas> getTugasUntukKetuaTim(User ketuaTim, Pageable pageable, String keyword) {
         if (StringUtils.isBlank(keyword)) {
-            return suratTugasRepository.findTugasForKetuaTimByStatus(ketuaTim, StatusSuratTugas.DISETUJUI, pageable);
+            return suratTugasRepository.findByKetuaTimAndStatus(ketuaTim, StatusSuratTugas.DISETUJUI, pageable);
         } else {
-            return suratTugasRepository.searchTugasForKetuaTimByStatus(ketuaTim, StatusSuratTugas.DISETUJUI, keyword,
+            return suratTugasRepository.findByKetuaTimAndStatusAndKeyword(ketuaTim, StatusSuratTugas.DISETUJUI, keyword,
                     pageable);
         }
+
+        // Di dalam class SuratTugasServiceImpl
+        // @Override
+        // public Page<SuratTugas> getTugasUntukKetuaTim(User ketuaTim, Pageable
+        // pageable, String keyword) {
+        // if (StringUtils.isBlank(keyword)) {
+        // return suratTugasRepository.findTugasForKetuaTimByStatus(ketuaTim,
+        // StatusSuratTugas.DISETUJUI, pageable);
+        // } else {
+        // return suratTugasRepository.searchTugasForKetuaTimByStatus(ketuaTim,
+        // StatusSuratTugas.DISETUJUI, keyword,
+        // pageable);
+        // }
     }
 
     @Override

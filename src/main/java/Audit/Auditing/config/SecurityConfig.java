@@ -44,10 +44,11 @@ public class SecurityConfig {
                                                 // .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI")
                                                 .requestMatchers("/pegawai/**").hasAuthority("PEGAWAI") // <-- TAMBAHKAN
                                                                                                         // BARIS INI
+                                                .requestMatchers("/audit/kertas-kerja/new/**",
+                                                                "/audit/kertas-kerja/save")
+                                                .hasAuthority("PEGAWAI") // Explicitly allow PEGAWAI
                                                 .requestMatchers("/audit/**")
-                                                .hasAnyAuthority("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI") // Tambahkan
-                                                                                                                // baris
-                                                                                                                // ini
+                                                .hasAnyAuthority("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI")
 
                                                 .requestMatchers("/dashboard")
                                                 .hasAnyAuthority("ADMIN", "KEPALASPI", "SEKRETARIS", "PEGAWAI")

@@ -28,6 +28,19 @@ public interface SuratTugasRepository extends JpaRepository<SuratTugas, Long> {
         Page<SuratTugas> findTugasForUserByStatus(@Param("user") User user, @Param("status") StatusSuratTugas status,
                         Pageable pageable); //
 
+        @Query("SELECT st FROM SuratTugas st WHERE st.ketuaTim = :ketuaTim AND st.status = :status ORDER BY st.tanggalMulaiAudit DESC")
+        Page<SuratTugas> findByKetuaTimAndStatus(@Param("ketuaTim") User ketuaTim,
+                        @Param("status") StatusSuratTugas status, Pageable pageable);
+
+        @Query("SELECT st FROM SuratTugas st WHERE st.ketuaTim = :ketuaTim AND st.status = :status AND " +
+                        "(LOWER(st.nomorSurat) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                        "LOWER(st.deskripsiSurat) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                        "LOWER(st.jenisAudit) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                        "LOWER(st.ketuaTim.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                        "LOWER(st.ketuaTim.username) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+        Page<SuratTugas> findByKetuaTimAndStatusAndKeyword(@Param("ketuaTim") User ketuaTim,
+                        @Param("status") StatusSuratTugas status, @Param("keyword") String keyword, Pageable pageable);
+
         // New method to find by NomorSurat for uniqueness check
         Optional<SuratTugas> findByNomorSurat(String nomorSurat);
 
