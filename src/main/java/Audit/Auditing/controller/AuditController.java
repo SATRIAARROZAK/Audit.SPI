@@ -92,11 +92,11 @@ public class AuditController {
 
         model.addAttribute("suratTugas", surat);
         model.addAttribute("pageTitle", "Buat Kertas Kerja");
-        return "audit/buat-kertas-kerja";
+        return "audit/halaman-kertas-kerja";
     }
 
     // Endpoint untuk memproses submit form kertas kerja (contoh sederhana)
-    @PostMapping("/kertas-kerja/save")
+    @PostMapping("/halaman-kerja/save")
     @PreAuthorize("hasAuthority('PEGAWAI')")
     public String saveKertasKerja(@RequestParam("suratTugasId") Long suratTugasId,
                                   @RequestParam("judulKertasKerja") String judulKertasKerja,
