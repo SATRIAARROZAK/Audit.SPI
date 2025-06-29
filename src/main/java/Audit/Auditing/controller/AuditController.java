@@ -1,24 +1,25 @@
 package Audit.Auditing.controller;
 
 import Audit.Auditing.config.CustomUserDetails;
+import Audit.Auditing.dto.KertasKerjaAuditDto; // Tambahkan import
+import Audit.Auditing.model.KertasKerjaAudit; // Tambahkan import
 import Audit.Auditing.model.StatusSuratTugas;
 import Audit.Auditing.model.SuratTugas;
+import Audit.Auditing.service.KertasKerjaAuditService; // Tambahkan import
 import Audit.Auditing.service.SuratTugasService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.access.prepost.PreAuthorize; // Import this
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable; // Import this
-import org.springframework.web.bind.annotation.PostMapping; // Import this
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // Import this
+import org.springframework.validation.BindingResult; // Tambahkan import
+import org.springframework.validation.annotation.Validated; // Tambahkan import
+import org.springframework.web.bind.annotation.*; // Ganti menjadi wildcard
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,9 +30,12 @@ public class AuditController {
 
     @Autowired
     private SuratTugasService suratTugasService;
+    
+    // Tambahkan service baru
+    @Autowired
+    private KertasKerjaAuditService kertasKerjaAuditService;
 
     @GetMapping("/rencana")
-    // @PreAuthorize("hasAnyAuthority('KEPALASPI', 'ADMIN', 'PEGAWAI')") // Otorisasi umum untuk halaman rencana audit
     public String rencanaAudit(
             Model model,
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -59,13 +63,13 @@ public class AuditController {
         model.addAttribute("sortDir", sortDir);
         model.addAttribute("keyword", keyword);
         model.addAttribute("pageTitle", "Rencana Audit (Khusus Ketua Tim)");
-        model.addAttribute("currentUser", userDetails.getUser()); // Pass current user for Thymeleaf check
+        model.addAttribute("currentUser", userDetails.getUser()); 
         return "audit/rencana-audit";
     }
-
-    // Endpoint untuk menampilkan form buat kertas kerja
+    
+    // Modifikasi method ini
     @GetMapping("/kertas-kerja/new/{suratTugasId}")
-    @PreAuthorize("hasAuthority('PEGAWAI')") // Hanya pegawai yang bisa membuat kertas kerja
+    @PreAuthorize("hasAuthority('PEGAWAI')")
     public String showCreateKertasKerjaForm(@PathVariable("suratTugasId") Long suratTugasId, Model model,
                                             @AuthenticationPrincipal CustomUserDetails userDetails,
                                             RedirectAttributes ra) {
@@ -77,57 +81,67 @@ public class AuditController {
 
         SuratTugas surat = suratOpt.get();
 
-        // Pastikan hanya ketua tim dari surat tugas ini yang bisa mengakses
         if (!surat.getKetuaTim().getId().equals(userDetails.getUser().getId())) {
             ra.addFlashAttribute("errorMessage", "Anda bukan ketua tim dari surat tugas ini.");
             return "redirect:/audit/rencana";
         }
         
-        // Pastikan status surat tugas sudah DISETUJUI
         if (surat.getStatus() != StatusSuratTugas.DISETUJUI) {
             ra.addFlashAttribute("errorMessage", "Kertas kerja hanya bisa dibuat untuk surat tugas yang sudah disetujui.");
             return "redirect:/audit/rencana";
         }
+        
+        KertasKerjaAuditDto dto = new KertasKerjaAuditDto();
+        dto.setSuratTugasId(surat.getId());
 
+        List<KertasKerjaAudit> existingKertasKerja = kertasKerjaAuditService.getBySuratTugasId(suratTugasId);
 
         model.addAttribute("suratTugas", surat);
+        model.addAttribute("kertasKerjaDto", dto); // Ganti nama objek
+        model.addAttribute("listKertasKerja", existingKertasKerja); // Kirim list
         model.addAttribute("pageTitle", "Buat Kertas Kerja");
-        return "audit/halaman-kertas-kerja";
+        return "audit/halaman-kertas-kerja"; // Nama file HTML baru
     }
 
-    // Endpoint untuk memproses submit form kertas kerja (contoh sederhana)
-    @PostMapping("/halaman-kerja/save")
+    // Ganti method ini dari PostMapping("/halaman-kerja/save")
+    @PostMapping("/kertas-kerja/save")
     @PreAuthorize("hasAuthority('PEGAWAI')")
-    public String saveKertasKerja(@RequestParam("suratTugasId") Long suratTugasId,
-                                  @RequestParam("judulKertasKerja") String judulKertasKerja,
-                                  @RequestParam("deskripsiKertasKerja") String deskripsiKertasKerja,
+    public String saveKertasKerja(@Validated @ModelAttribute("kertasKerjaDto") KertasKerjaAuditDto kertasKerjaDto,
+                                  BindingResult result,
                                   @AuthenticationPrincipal CustomUserDetails userDetails,
-                                  RedirectAttributes ra) {
-        // Dalam implementasi nyata, Anda akan menyimpan data ini ke database
-        // dan mungkin memperbarui status di SuratTugas jika ada.
-        // Untuk demo ini, kita hanya menampilkan pesan sukses.
-
-        Optional<SuratTugas> suratOpt = suratTugasService.getSuratTugasById(suratTugasId);
+                                  RedirectAttributes ra, Model model) {
+        
+        Optional<SuratTugas> suratOpt = suratTugasService.getSuratTugasById(kertasKerjaDto.getSuratTugasId());
         if (suratOpt.isEmpty() || !suratOpt.get().getKetuaTim().getId().equals(userDetails.getUser().getId())) {
              ra.addFlashAttribute("errorMessage", "Surat Tugas tidak ditemukan atau Anda tidak memiliki izin.");
             return "redirect:/audit/rencana";
         }
+        
+        if (result.hasErrors()) {
+            model.addAttribute("suratTugas", suratOpt.get());
+            model.addAttribute("pageTitle", "Buat Kertas Kerja");
+            model.addAttribute("listKertasKerja", kertasKerjaAuditService.getBySuratTugasId(kertasKerjaDto.getSuratTugasId()));
+            return "audit/halaman-kertas-kerja";
+        }
 
-        // Logic to save Kertas Kerja (dummy for now)
-        System.out.println("Kertas Kerja Baru Dibuat:");
-        System.out.println("Surat Tugas ID: " + suratTugasId);
-        System.out.println("Judul: " + judulKertasKerja);
-        System.out.println("Deskripsi: " + deskripsiKertasKerja);
-        System.out.println("Dibuat oleh: " + userDetails.getUsername());
+        kertasKerjaAuditService.save(kertasKerjaDto, userDetails.getUser());
 
-        ra.addFlashAttribute("successMessage", "Kertas Kerja '" + judulKertasKerja + "' berhasil dibuat!");
-        return "redirect:/audit/rencana";
+        ra.addFlashAttribute("successMessage", "Kertas Kerja berhasil disimpan!");
+        return "redirect:/audit/kertas-kerja/new/" + kertasKerjaDto.getSuratTugasId();
     }
-
 
     @GetMapping("/review")
     public String rencanaReviewAudit(Model model) {
         model.addAttribute("pageTitle", "Rencana Review Audit");
         return "audit/rencana-review-audit";
+    }
+
+    // Method baru untuk menampilkan semua kertas kerja
+    @GetMapping("/kertas-kerja/list")
+    public String listAllKertasKerja(Model model) {
+        List<KertasKerjaAudit> list = kertasKerjaAuditService.getAll();
+        model.addAttribute("listKertasKerja", list);
+        model.addAttribute("pageTitle", "Daftar Semua Kertas Kerja Audit");
+        return "audit/list-kertas-kerja"; // file HTML baru
     }
 }
