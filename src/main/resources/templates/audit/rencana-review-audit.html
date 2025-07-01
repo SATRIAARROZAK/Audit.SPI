@@ -4,10 +4,19 @@
 <head th:replace="~{fragments/_header :: header(${pageTitle})}"></head>
 
 <body>
-    <div th:replace="~{fragments/_navbar :: navbar}"></div>
-    <main class="container">
-       
-    </main>
+
+    <div class="wrapper">
+        <div th:replace="~{fragments/_sidebar :: sidebar}"></div>
+
+        <div class="main-content">
+            <div th:replace="~{fragments/_navbar :: navbar}"></div>
+
+            <main class="container-fluid" style="padding-top: 70px;">
+
+            </main>
+        </div>
+    </div>
+
     <div th:replace="~{fragments/_footer :: footer}"></div>
 </body>
 

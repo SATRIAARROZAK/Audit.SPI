@@ -2,106 +2,36 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <body>
-    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <nav th:fragment="navbar" class="navbar navbar-dark bg-primary fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" th:href="@{/dashboard}">Aplikasi Auditing SPI</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                    </li>
-                    <li class="nav-item dropdown" sec:authorize="hasAuthority('ADMIN')">
-                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            Manajemen User
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                            <li><a class="dropdown-item" th:href="@{/admin/users/list}">Daftar User</a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/surat-tugas/list}">Daftar Surat Tugas</a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown" sec:authorize="hasAuthority('SEKRETARIS')">
-                        <a class="nav-link dropdown-toggle" href="#" id="sekretarisDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            Surat Tugas
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="sekretarisDropdown">
-                            <li><a class="dropdown-item" th:href="@{/sekretaris/surat-tugas/list}">Review Surat
-                                    Masuk</a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('KEPALASPI', 'SEKRETARIS')">
-                        <a class="nav-link dropdown-toggle" href="#" id="kepalaSpiDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            Persetujuan
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="kepalaSpiDropdown">
-                            <li><a class="dropdown-item" th:href="@{/kepalaspi/surat-tugas/list}">Persetujuan Surat
-                                    Tugas</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasAuthority('PEGAWAI')">
-                        <a class="nav-link" th:href="@{/pegawai/surat-tugas/list}">Surat Tugas Saya</a>
-                    </li>
+            <div class="d-flex align-items-center">
+                <button class="navbar-toggler" type="button" id="sidebar-toggle">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a class="navbar-brand ms-3" th:href="@{/dashboard}">Aplikasi Auditing SPI</a>
+            </div>
 
-                    <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('ADMIN', 'KEPALASPI', 'SEKRETARIS', 'PEGAWAI')">
-                        <a class="nav-link dropdown-toggle" href="#" id="auditDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            Audit
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="auditDropdown">
-                            <li><a class="dropdown-item" th:href="@{/audit/rencana}">Rencana Audit</a></li>
-                            <li><a class="dropdown-item" th:href="@{/audit/review}">Rencana Review Audit</a></li>
-                        </ul>
-                    </li>
-
-                </ul>
-
+            <div class="d-flex align-items-center">
                 <div class="dropdown me-3">
-                    <a href="#" class="text-white" id="notificationBell" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
+                    <a href="#" class="text-white" id="notificationBell" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-bell fs-5 position-relative">
-                            <span id="notification-badge"
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                style="font-size: 0.6em; display: none;">
-                                9+
-                            </span>
+                            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6em; display: none;">9+</span>
                         </i>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-0"
-                        aria-labelledby="notificationBell" id="notification-list"
-                        style="width: 400px; max-height: 50vh; overflow-y: auto;">
-                        <li>
-                            <div class="dropdown-item text-center fst-italic">Memuat notifikasi...</div>
-                        </li>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-0" aria-labelledby="notificationBell" id="notification-list" style="width: 400px; max-height: 50vh; overflow-y: auto;">
+                        <li><div class="dropdown-item text-center fst-italic">Memuat notifikasi...</div></li>
                     </ul>
                 </div>
 
                 <div class="dropdown">
-                    <a href="#" class="d-flex align-items-center text-white text-decoration-none"
-                        id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img th:if="${#authentication.principal.user.photoPath}"
-                            th:src="@{'/profile-photos/' + ${#authentication.principal.user.photoPath}}"
-                            class="rounded-circle me-2" alt="Foto Profil"
-                            style="width: 40px; height: 40px; object-fit: cover;">
-
-                        <img th:unless="${#authentication.principal.user.photoPath}"
-                            th:src="@{https://via.placeholder.com/40}" class="rounded-circle me-2" alt="Foto Profil">
-
-                        <span th:text="${#authentication.principal.user.fullName ?: #authentication.name}">Nama
-                            Pengguna</span>
+                    <a href="#" class="d-flex align-items-center text-white text-decoration-none" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img th:if="${#authentication.principal.user.photoPath}" th:src="@{'/profile-photos/' + ${#authentication.principal.user.photoPath}}" class="rounded-circle me-2" alt="Foto Profil" style="width: 40px; height: 40px; object-fit: cover;">
+                        <img th:unless="${#authentication.principal.user.photoPath}" th:src="@{https://via.placeholder.com/40}" class="rounded-circle me-2" alt="Foto Profil">
+                        <span th:text="${#authentication.principal.user.fullName ?: #authentication.name}">Nama Pengguna</span>
                     </a>
-
                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="userDropdown">
                         <li><a class="dropdown-item" th:href="@{/profile/edit}">Edit Profil</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
+                        <li><hr class="dropdown-divider"></li>
                         <li>
                             <form th:action="@{/logout}" method="post" class="d-inline">
                                 <button type="submit" class="dropdown-item">Logout</button>
@@ -109,10 +39,8 @@
                         </li>
                     </ul>
                 </div>
-
             </div>
         </div>
     </nav>
 </body>
-
 </html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<body>
+    <nav th:fragment="sidebar" class="sidebar">
+        <ul class="nav flex-column">
+             <li class="nav-item">
+                 <a class="nav-link text-white" th:href="@{/dashboard}">
+                     <i class="fas fa-tachometer-alt fa-fw me-2"></i>Dashboard
+                 </a>
+             </li>
+              <li class="nav-item dropdown" sec:authorize="hasAuthority('ADMIN')">
+                 <a class="nav-link dropdown-toggle text-white" href="#" data-bs-toggle="collapse" data-bs-target="#adminMenu" aria-expanded="false">
+                     <i class="fas fa-users-cog fa-fw me-2"></i>Manajemen
+                 </a>
+                 <div class="collapse" id="adminMenu">
+                     <ul class="nav flex-column ms-3">
+                         <li class="nav-item"><a class="nav-link" th:href="@{/admin/users/list}">Daftar User</a></li>
+                         <li class="nav-item"><a class="nav-link" th:href="@{/admin/surat-tugas/list}">Surat Tugas</a></li>
+                     </ul>
+                 </div>
+             </li>
+             <li class="nav-item" sec:authorize="hasAuthority('SEKRETARIS')">
+                 <a class="nav-link text-white" th:href="@{/sekretaris/surat-tugas/list}">
+                     <i class="fas fa-envelope-open-text fa-fw me-2"></i>Review Surat
+                 </a>
+             </li>
+             <li class="nav-item" sec:authorize="hasAnyAuthority('KEPALASPI', 'SEKRETARIS')">
+                 <a class="nav-link text-white" th:href="@{/kepalaspi/surat-tugas/list}">
+                     <i class="fas fa-check-circle fa-fw me-2"></i>Persetujuan
+                 </a>
+             </li>
+             <li class="nav-item" sec:authorize="hasAuthority('PEGAWAI')">
+                 <a class="nav-link text-white" th:href="@{/pegawai/surat-tugas/list}">
+                     <i class="fas fa-briefcase fa-fw me-2"></i>Surat Tugas Saya
+                 </a>
+             </li>
+             <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('ADMIN', 'KEPALASPI', 'SEKRETARIS', 'PEGAWAI')">
+                 <a class="nav-link dropdown-toggle text-white" href="#" data-bs-toggle="collapse" data-bs-target="#auditMenu" aria-expanded="false">
+                     <i class="fas fa-clipboard-list fa-fw me-2"></i>Audit
+                 </a>
+                 <div class="collapse" id="auditMenu">
+                     <ul class="nav flex-column ms-3">
+                         <li><a class="nav-link" th:href="@{/audit/rencana}">Rencana Audit</a></li>
+                         <li><a class="nav-link" th:href="@{/audit/review}">Rencana Review Audit</a></li>
+                     </ul>
+                 </div>
+             </li>
+        </ul>
+    </nav>
+</body>
+</html>

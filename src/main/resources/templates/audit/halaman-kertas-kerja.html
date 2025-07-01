@@ -4,115 +4,132 @@
 <head th:replace="~{fragments/_header :: header('Buat Kertas Kerja')}"></head>
 
 <body>
-    <div th:replace="~{fragments/_navbar :: navbar}"></div>
 
-    <main class="container">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h2 th:text="${pageTitle}">Buat Kertas Kerja</h2>
-                <p class="text-muted">Untuk Surat Tugas Nomor: <strong th:text="${suratTugas.nomorSurat}"></strong></p>
-            </div>
-            <a th:href="@{/audit/rencana}" class="btn btn-secondary">Kembali ke Rencana Audit</a>
-        </div>
-        <hr>
 
-        <div class="card">
-            <div class="card-header">
-                <ul class="nav nav-tabs card-header-tabs" id="kertasKerjaTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="form-tab" data-bs-toggle="tab" data-bs-target="#form-pane"
-                            type="button" role="tab" aria-controls="form-pane" aria-selected="true">
-                            <i class="fas fa-edit me-1"></i> Buat Kertas Kerja Baru
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane"
-                            type="button" role="tab" aria-controls="list-pane" aria-selected="false">
-                            <i class="fas fa-list-alt me-1"></i> Daftar Kertas Kerja
-                        </button>
-                    </li>
-                </ul>
-            </div>
-            <div class="card-body">
-                <div class="tab-content" id="kertasKerjaTabContent">
-                    <div class="tab-pane fade show active" id="form-pane" role="tabpanel" aria-labelledby="form-tab">
-                        <h4>Form Kertas Kerja Dinamis</h4>
-                        <form th:action="@{/audit/kertas-kerja/save}" th:object="${kertasKerjaDto}" method="post"
-                            enctype="multipart/form-data">
-                            <input type="hidden" th:field="*{suratTugasId}">
+    <div class="wrapper">
+        <div th:replace="~{fragments/_sidebar :: sidebar}"></div>
 
-                            <div id="prosedur-container">
-                            </div>
+        <div class="main-content">
+            <div th:replace="~{fragments/_navbar :: navbar}"></div>
 
-                            <button type="button" id="add-prosedur" class="btn btn-primary my-3">
-                                <i class="fas fa-plus me-1"></i> Tambah Prosedur
-                            </button>
-
-                            <div class="mb-3">
-                                <label for="dokumen" class="form-label">Upload Dokumen Pendukung (Opsional untuk semua
-                                    prosedur di atas):</label>
-                                <input type="file" id="dokumen" class="form-control" th:field="*{dokumen}"
-                                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
-                            </div>
-
-                            <button type="submit" class="btn btn-success mt-3"><i class="fas fa-save me-2"></i>Simpan
-                                Kertas Kerja</button>
-                        </form>
+            <main class="container-fluid" style="padding-top: 70px;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 th:text="${pageTitle}">Buat Kertas Kerja</h2>
+                        <p class="text-muted">Untuk Surat Tugas Nomor: <strong
+                                th:text="${suratTugas.nomorSurat}"></strong>
+                        </p>
                     </div>
+                    <a th:href="@{/audit/rencana}" class="btn btn-secondary">Kembali ke Rencana Audit</a>
+                </div>
+                <hr>
 
-                    <div class="tab-pane fade" id="list-pane" role="tabpanel" aria-labelledby="list-tab">
-                        <!-- <h4>Daftar Kertas Kerja untuk Surat Tugas Ini</h4> -->
-                        <div th:if="${#maps.isEmpty(listKertasKerja)}" class="alert alert-info">
-                            Belum ada kertas kerja yang dibuat untuk surat tugas ini.
-                        </div>
-                        <div th:unless="${#maps.isEmpty(listKertasKerja)}" class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Prosedur Audit</th>
-                                        <th>Tahapan</th>
-                                        <th>Dibuat Oleh</th>
-                                        <th>Dokumen</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <th:block th:each="entry, iterStat : ${listKertasKerja}">
-                                        <th:block th:with="prosedurList=${entry.value}">
-                                            <tr th:each="item, itemStat : ${prosedurList}"
-                                                th:if="${prosedurList != null and not #lists.isEmpty(prosedurList)}">
-                                                <td th:if="${itemStat.index == 0}"
-                                                    th:rowspan="${#lists.size(prosedurList)}"
-                                                    th:text="${iterStat.count}"
-                                                    style="vertical-align: middle; text-align: center;"></td>
-                                                <td th:if="${itemStat.index == 0}"
-                                                    th:rowspan="${#lists.size(prosedurList)}" th:text="${item.prosedur}"
-                                                    style="vertical-align: middle;"></td>
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="kertasKerjaTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="form-tab" data-bs-toggle="tab"
+                                    data-bs-target="#form-pane" type="button" role="tab" aria-controls="form-pane"
+                                    aria-selected="true">
+                                    <i class="fas fa-edit me-1"></i> Buat Kertas Kerja Baru
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane"
+                                    type="button" role="tab" aria-controls="list-pane" aria-selected="false">
+                                    <i class="fas fa-list-alt me-1"></i> Daftar Kertas Kerja
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="kertasKerjaTabContent">
+                            <div class="tab-pane fade show active" id="form-pane" role="tabpanel"
+                                aria-labelledby="form-tab">
+                                <h4>Form Kertas Kerja Dinamis</h4>
+                                <form th:action="@{/audit/kertas-kerja/save}" th:object="${kertasKerjaDto}"
+                                    method="post" enctype="multipart/form-data">
+                                    <input type="hidden" th:field="*{suratTugasId}">
 
-                                                <td th:text="${#strings.isEmpty(item.tahapan)} ? '-' : ${item.tahapan}">
-                                                </td>
-                                                <td
-                                                    th:text="${item.dilakukanOleh.fullName ?: item.dilakukanOleh.username}">
-                                                </td>
-                                                <td>
-                                                    <a th:if="${item.dokumenPath}"
-                                                        th:href="@{'/profile-photos/' + ${item.dokumenPath}}"
-                                                        target="_blank" class="btn btn-info btn-sm">
-                                                        <i class="fas fa-download me-1"></i> Lihat
-                                                    </a>
-                                                    <span th:unless="${item.dokumenPath}" class="text-muted">-</span>
-                                                </td>
+                                    <div id="prosedur-container">
+                                    </div>
+
+                                    <button type="button" id="add-prosedur" class="btn btn-primary my-3">
+                                        <i class="fas fa-plus me-1"></i> Tambah Prosedur
+                                    </button>
+
+                                    <div class="mb-3">
+                                        <label for="dokumen" class="form-label">Upload Dokumen Pendukung (Opsional untuk
+                                            semua
+                                            prosedur di atas):</label>
+                                        <input type="file" id="dokumen" class="form-control" th:field="*{dokumen}"
+                                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+                                    </div>
+
+                                    <button type="submit" class="btn btn-success mt-3"><i
+                                            class="fas fa-save me-2"></i>Simpan
+                                        Kertas Kerja</button>
+                                </form>
+                            </div>
+
+                            <div class="tab-pane fade" id="list-pane" role="tabpanel" aria-labelledby="list-tab">
+                                <!-- <h4>Daftar Kertas Kerja untuk Surat Tugas Ini</h4> -->
+                                <div th:if="${#maps.isEmpty(listKertasKerja)}" class="alert alert-info">
+                                    Belum ada kertas kerja yang dibuat untuk surat tugas ini.
+                                </div>
+                                <div th:unless="${#maps.isEmpty(listKertasKerja)}" class="table-responsive">
+                                    <table class="table table-bordered table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Prosedur Audit</th>
+                                                <th>Tahapan</th>
+                                                <th>Dibuat Oleh</th>
+                                                <th>Dokumen</th>
                                             </tr>
-                                        </th:block>
-                                    </th:block>
-                                </tbody>
-                            </table>
+                                        </thead>
+                                        <tbody>
+                                            <th:block th:each="entry, iterStat : ${listKertasKerja}">
+                                                <th:block th:with="prosedurList=${entry.value}">
+                                                    <tr th:each="item, itemStat : ${prosedurList}"
+                                                        th:if="${prosedurList != null and not #lists.isEmpty(prosedurList)}">
+                                                        <td th:if="${itemStat.index == 0}"
+                                                            th:rowspan="${#lists.size(prosedurList)}"
+                                                            th:text="${iterStat.count}"
+                                                            style="vertical-align: middle; text-align: center;"></td>
+                                                        <td th:if="${itemStat.index == 0}"
+                                                            th:rowspan="${#lists.size(prosedurList)}"
+                                                            th:text="${item.prosedur}" style="vertical-align: middle;">
+                                                        </td>
+
+                                                        <td
+                                                            th:text="${#strings.isEmpty(item.tahapan)} ? '-' : ${item.tahapan}">
+                                                        </td>
+                                                        <td
+                                                            th:text="${item.dilakukanOleh.fullName ?: item.dilakukanOleh.username}">
+                                                        </td>
+                                                        <td>
+                                                            <a th:if="${item.dokumenPath}"
+                                                                th:href="@{'/profile-photos/' + ${item.dokumenPath}}"
+                                                                target="_blank" class="btn btn-info btn-sm">
+                                                                <i class="fas fa-download me-1"></i> Lihat
+                                                            </a>
+                                                            <span th:unless="${item.dokumenPath}"
+                                                                class="text-muted">-</span>
+                                                        </td>
+                                                    </tr>
+                                                </th:block>
+                                            </th:block>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
-    </main>
+    </div>
 
     <div th:replace="~{fragments/_footer :: footer}"></div>
     <script>

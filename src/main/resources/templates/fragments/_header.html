@@ -8,19 +8,80 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <style>
-        /* Ensure table cells containing dropdowns don't hide overflow */
-        .dropdown-static-parent {
-            overflow: visible !important;
+        body {
+            overflow-x: hidden;
         }
 
-        /* Adjust dropdown menu positioning to ensure visibility */
-        .dropdown-static-parent .dropdown-menu {
-            position: absolute !important;
-            /* Or 'fixed' if you want it to scroll with the viewport */
-            /* You might need to adjust 'left', 'right', 'top', 'bottom' based on exact needs */
-            z-index: 1050; /* Ensure it's above other content */
+        .wrapper {
+            display: flex;
+            width: 100%;
+        }
+
+        .sidebar {
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 999;
+            background: #212529; /* Warna dark */
+            color: #fff;
+            transition: all 0.3s;
+            padding-top: 56px; /* Sesuaikan dengan tinggi navbar */
+        }
+        
+        .main-content {
+            width: 100%;
+            padding-left: 250px; /* Lebar default sidebar */
+            transition: all 0.3s;
+        }
+        
+        /* State ketika sidebar diciutkan */
+        .wrapper.sidebar-collapsed .sidebar {
+            margin-left: -250px;
+        }
+
+        .wrapper.sidebar-collapsed .main-content {
+            padding-left: 0;
+        }
+        
+        /* Style untuk link di sidebar */
+        .sidebar .nav-link {
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.2s;
+        }
+
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            color: #fff;
+            background: #343a40;
+        }
+        
+        .sidebar .dropdown-menu {
+             background-color: #343a40;
+        }
+        
+        .sidebar .dropdown-item {
+             color: rgba(255, 255, 255, 0.7);
+        }
+        
+         .sidebar .dropdown-item:hover {
+             color: #fff;
+             background-color: #495057;
+         }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                 margin-left: -250px;
+            }
+            .main-content {
+                padding-left: 0;
+            }
+             .wrapper.sidebar-collapsed .sidebar {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
