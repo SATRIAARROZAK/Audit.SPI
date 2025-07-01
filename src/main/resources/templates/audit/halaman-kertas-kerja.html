@@ -78,30 +78,32 @@
                                 </thead>
                                 <tbody>
                                     <th:block th:each="entry, iterStat : ${listKertasKerja}">
-                                        <tr th:with="prosedurList=${entry.value}"
-                                            th:if="${prosedurList != null and not #lists.isEmpty(prosedurList)}">
-                                            <td th:text="${iterStat.count}"></td>
-                                            <td th:text="${prosedurList[0].prosedur}"></td>
-                                            <td>
-                                                <ul class="list-unstyled mb-0 ps-3">
-                                                    <li th:each="item : ${prosedurList}"
-                                                        th:text="${#strings.isEmpty(item.tahapan)} ? '-' : '• ' + ${item.tahapan}">
-                                                    </li>
-                                                </ul>
-                                            </td>
-                                            <td
-                                                th:text="${prosedurList[0].dilakukanOleh.fullName ?: prosedurList[0].dilakukanOleh.username}">
-                                            </td>
-                                            <td>
-                                                <a th:if="${prosedurList[0].dokumenPath}"
-                                                    th:href="@{'/profile-photos/' + ${prosedurList[0].dokumenPath}}"
-                                                    target="_blank" class="btn btn-info btn-sm">
-                                                    <i class="fas fa-download me-1"></i> Lihat
-                                                </a>
-                                                <span th:unless="${prosedurList[0].dokumenPath}"
-                                                    class="text-muted">-</span>
-                                            </td>
-                                        </tr>
+                                        <th:block th:with="prosedurList=${entry.value}">
+                                            <tr th:each="item, itemStat : ${prosedurList}"
+                                                th:if="${prosedurList != null and not #lists.isEmpty(prosedurList)}">
+                                                <td th:if="${itemStat.index == 0}"
+                                                    th:rowspan="${#lists.size(prosedurList)}"
+                                                    th:text="${iterStat.count}"
+                                                    style="vertical-align: middle; text-align: center;"></td>
+                                                <td th:if="${itemStat.index == 0}"
+                                                    th:rowspan="${#lists.size(prosedurList)}" th:text="${item.prosedur}"
+                                                    style="vertical-align: middle;"></td>
+
+                                                <td th:text="${#strings.isEmpty(item.tahapan)} ? '-' : ${item.tahapan}">
+                                                </td>
+                                                <td
+                                                    th:text="${item.dilakukanOleh.fullName ?: item.dilakukanOleh.username}">
+                                                </td>
+                                                <td>
+                                                    <a th:if="${item.dokumenPath}"
+                                                        th:href="@{'/profile-photos/' + ${item.dokumenPath}}"
+                                                        target="_blank" class="btn btn-info btn-sm">
+                                                        <i class="fas fa-download me-1"></i> Lihat
+                                                    </a>
+                                                    <span th:unless="${item.dokumenPath}" class="text-muted">-</span>
+                                                </td>
+                                            </tr>
+                                        </th:block>
                                     </th:block>
                                 </tbody>
                             </table>

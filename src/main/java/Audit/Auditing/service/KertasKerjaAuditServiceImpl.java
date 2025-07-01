@@ -46,10 +46,12 @@ public class KertasKerjaAuditServiceImpl implements KertasKerjaAuditService {
         if (dto.getDokumen() != null && !dto.getDokumen().isEmpty()) {
             dokumenPath = fileStorageService.storeFile(dto.getDokumen());
         }
+        
+        // PINDAHKAN PEMBUATAN UUID KE SINI
+        UUID groupIdentifier = UUID.randomUUID(); 
 
         // Loop melalui setiap prosedur yang di-submit
         for (int i = 0; i < dto.getProsedur().size(); i++) {
-            UUID groupIdentifier = UUID.randomUUID(); // PINDAHKAN KE SINI
             String prosedurText = dto.getProsedur().get(i);
 
             // Loop melalui setiap tahapan untuk menemukan yang sesuai
@@ -62,7 +64,7 @@ public class KertasKerjaAuditServiceImpl implements KertasKerjaAuditService {
 
                     KertasKerjaAudit kka = new KertasKerjaAudit();
                     kka.setSuratTugas(suratTugas);
-                    kka.setProsedurGroup(groupIdentifier);
+                    kka.setProsedurGroup(groupIdentifier); // Gunakan UUID yang sama
                     kka.setProsedur(prosedurText);
                     kka.setTahapan(tahapanText);
                     kka.setDilakukanOleh(user);
@@ -75,7 +77,7 @@ public class KertasKerjaAuditServiceImpl implements KertasKerjaAuditService {
             if (!hasTahapan) {
                 KertasKerjaAudit kka = new KertasKerjaAudit();
                 kka.setSuratTugas(suratTugas);
-                kka.setProsedurGroup(groupIdentifier);
+                kka.setProsedurGroup(groupIdentifier); // Gunakan UUID yang sama
                 kka.setProsedur(prosedurText);
                 kka.setTahapan(null); // Tahapan kosong
                 kka.setDilakukanOleh(user);
