@@ -26,14 +26,15 @@ public class KertasKerjaAuditServiceImpl implements KertasKerjaAuditService {
     @Autowired
     private FileStorageService fileStorageService;
 
-    // Metode save lama, bisa Anda hapus atau biarkan jika masih terpakai di tempat lain
+    // Metode save lama, bisa Anda hapus atau biarkan jika masih terpakai di tempat
+    // lain
     @Override
     @Transactional
     public KertasKerjaAudit save(KertasKerjaAuditDto dto, User user) {
         // ... (Implementasi lama)
         return null; // Sesuaikan jika metode ini masih dipakai
     }
-    
+
     @Override
     @Transactional
     public void saveDynamic(KertasKerjaAuditDto dto, User user) {
@@ -46,15 +47,14 @@ public class KertasKerjaAuditServiceImpl implements KertasKerjaAuditService {
             dokumenPath = fileStorageService.storeFile(dto.getDokumen());
         }
 
-        UUID groupIdentifier = UUID.randomUUID();
-
         // Loop melalui setiap prosedur yang di-submit
         for (int i = 0; i < dto.getProsedur().size(); i++) {
+            UUID groupIdentifier = UUID.randomUUID(); // PINDAHKAN KE SINI
             String prosedurText = dto.getProsedur().get(i);
-            
+
             // Loop melalui setiap tahapan untuk menemukan yang sesuai
             boolean hasTahapan = false;
-            for(int j = 0; j < dto.getTahapan().size(); j++) {
+            for (int j = 0; j < dto.getTahapan().size(); j++) {
                 // Cek apakah tahapan ini milik prosedur saat ini
                 if (dto.getProsedurIndex().get(j) == i) {
                     hasTahapan = true;
@@ -73,24 +73,23 @@ public class KertasKerjaAuditServiceImpl implements KertasKerjaAuditService {
 
             // Jika prosedur tidak punya tahapan sama sekali
             if (!hasTahapan) {
-                 KertasKerjaAudit kka = new KertasKerjaAudit();
-                 kka.setSuratTugas(suratTugas);
-                 kka.setProsedurGroup(groupIdentifier);
-                 kka.setProsedur(prosedurText);
-                 kka.setTahapan(null); // Tahapan kosong
-                 kka.setDilakukanOleh(user);
-                 kka.setDokumenPath(dokumenPath);
-                 kertasKerjaAuditRepository.save(kka);
+                KertasKerjaAudit kka = new KertasKerjaAudit();
+                kka.setSuratTugas(suratTugas);
+                kka.setProsedurGroup(groupIdentifier);
+                kka.setProsedur(prosedurText);
+                kka.setTahapan(null); // Tahapan kosong
+                kka.setDilakukanOleh(user);
+                kka.setDokumenPath(dokumenPath);
+                kertasKerjaAuditRepository.save(kka);
             }
         }
     }
-
 
     @Override
     public List<KertasKerjaAudit> getBySuratTugasId(Long suratTugasId) {
         return kertasKerjaAuditRepository.findBySuratTugasId(suratTugasId);
     }
-    
+
     @Override
     public List<KertasKerjaAudit> getAll() {
         return kertasKerjaAuditRepository.findAll();

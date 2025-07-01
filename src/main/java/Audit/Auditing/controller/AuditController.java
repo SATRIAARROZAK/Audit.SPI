@@ -132,7 +132,9 @@ public class AuditController {
         kertasKerjaAuditService.saveDynamic(kertasKerjaDto, userDetails.getUser());
 
         ra.addFlashAttribute("successMessage", "Kertas Kerja berhasil disimpan!");
-        return "redirect:/audit/kertas-kerja/new/" + kertasKerjaDto.getSuratTugasId();
+        // return "redirect:/audit/kertas-kerja/new/" + kertasKerjaDto.getSuratTugasId();
+
+          return "redirect:/audit/kertas-kerja/new/" + kertasKerjaDto.getSuratTugasId() + "?tab=list";
     }
 
     @GetMapping("/review")
