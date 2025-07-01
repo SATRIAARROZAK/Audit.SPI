@@ -36,80 +36,61 @@
             <div class="card-body">
                 <div class="tab-content" id="kertasKerjaTabContent">
                     <div class="tab-pane fade show active" id="form-pane" role="tabpanel" aria-labelledby="form-tab">
-                        <h4>Form Kertas Kerja</h4>
+                        <h4>Form Kertas Kerja Dinamis</h4>
                         <form th:action="@{/audit/kertas-kerja/save}" th:object="${kertasKerjaDto}" method="post" enctype="multipart/form-data">
-                            <input type="hidden" th:field="*{suratTugasId}" />
-                            
-                            <ul class="nav nav-pills mb-3" id="formTabs" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="prosedur-tab-form" data-bs-toggle="tab" data-bs-target="#prosedur-content" type="button" role="tab">1. Form Prosedur</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="tahapan-tab-form" data-bs-toggle="tab" data-bs-target="#tahapan-content" type="button" role="tab">2. Tahapan</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="upload-tab-form" data-bs-toggle="tab" data-bs-target="#upload-content" type="button" role="tab">3. Upload Dokumen</button>
-                                </li>
-                            </ul>
-                            
-                            <div class="tab-content border p-3" id="formTabsContent">
-                                <div class="tab-pane fade show active" id="prosedur-content" role="tabpanel">
-                                    <div class="mb-3">
-                                        <label for="prosedur" class="form-label">Prosedur:</label>
-                                        <textarea id="prosedur" class="form-control" rows="5" th:field="*{prosedur}" required></textarea>
-                                        <div th:if="${#fields.hasErrors('prosedur')}" th:errors="*{prosedur}" class="text-danger small mt-1"></div>
-                                    </div>
+                            <input type="hidden" th:field="*{suratTugasId}">
+
+                            <div id="prosedur-container">
                                 </div>
-                                <div class="tab-pane fade" id="tahapan-content" role="tabpanel">
-                                    <div class="mb-3">
-                                        <label for="tahapan" class="form-label">Tahapan (Opsional):</label>
-                                        <textarea id="tahapan" class="form-control" rows="5" th:field="*{tahapan}"></textarea>
-                                    </div>
-                                </div>
-                                <div class="tab-pane fade" id="upload-content" role="tabpanel">
-                                    <div class="mb-3">
-                                        <label for="dokumen" class="form-label">Upload Dokumen Pendukung (Opsional):</label>
-                                        <input type="file" id="dokumen" class="form-control" th:field="*{dokumen}" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" />
-                                        <small class="form-text text-muted">Tipe file yang diizinkan: Gambar, PDF, Word, Excel.</small>
-                                    </div>
-                                </div>
+
+                            <button type="button" id="add-prosedur" class="btn btn-primary my-3">
+                                <i class="fas fa-plus me-1"></i> Tambah Prosedur
+                            </button>
+
+                            <div class="mb-3">
+                                <label for="dokumen" class="form-label">Upload Dokumen Pendukung (Opsional untuk semua prosedur di atas):</label>
+                                <input type="file" id="dokumen" class="form-control" th:field="*{dokumen}" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
                             </div>
-                            
-                            <button type="submit" class="btn btn-primary mt-3"><i class="fas fa-save me-2"></i>Simpan Kertas Kerja</button>
+
+                            <button type="submit" class="btn btn-success mt-3"><i class="fas fa-save me-2"></i>Simpan Kertas Kerja</button>
                         </form>
                     </div>
 
                     <div class="tab-pane fade" id="list-pane" role="tabpanel" aria-labelledby="list-tab">
-                        <h4>Daftar Kertas Kerja untuk Surat Tugas Ini</h4>
-                         <div th:if="${#lists.isEmpty(listKertasKerja)}" class="alert alert-info">
+                        <!-- <h4>Daftar Kertas Kerja untuk Surat Tugas Ini</h4> -->
+                         <div th:if="${#maps.isEmpty(listKertasKerja)}" class="alert alert-info">
                             Belum ada kertas kerja yang dibuat untuk surat tugas ini.
                         </div>
-                        <div th:unless="${#lists.isEmpty(listKertasKerja)}" class="table-responsive">
-                            <table class="table table-striped table-hover">
+                        <div th:unless="${#maps.isEmpty(listKertasKerja)}" class="table-responsive">
+                            <table class="table table-bordered table-striped">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>No</th>
-                                        <th>Tgl Dibuat</th>
-                                        <th>Prosedur</th>
+                                        <th>Prosedur Audit</th>
                                         <th>Tahapan</th>
-                                        <th>Dilakukan Oleh</th>
+                                        <th>Dibuat Oleh</th>
                                         <th>Dokumen</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="kk, iterStat : ${listKertasKerja}">
-                                        <td th:text="${iterStat.count}"></td>
-                                        <td th:text="${#temporals.format(kk.tanggalDibuat, 'dd MMM yyyy, HH:mm')}"></td>
-                                        <td th:text="${#strings.abbreviate(kk.prosedur, 100)}"></td>
-                                        <td th:text="${#strings.abbreviate(kk.tahapan ?: '-', 100)}"></td>
-                                        <td th:text="${kk.dilakukanOleh.fullName ?: kk.dilakukanOleh.username}"></td>
-                                        <td>
-                                            <a th:if="${kk.dokumenPath}" th:href="@{'/profile-photos/' + ${kk.dokumenPath}}" target="_blank" class="btn btn-info btn-sm">
-                                                <i class="fas fa-download me-1"></i> Lihat
-                                            </a>
-                                            <span th:unless="${kk.dokumenPath}" class="text-muted">-</span>
-                                        </td>
-                                    </tr>
+                                    <th:block th:each="entry, iterStat : ${listKertasKerja}">
+                                        <tr th:with="prosedurList=${entry.value}" th:if="${prosedurList != null and not #lists.isEmpty(prosedurList)}">
+                                            <td th:text="${iterStat.count}"></td>
+                                            <td th:text="${prosedurList[0].prosedur}"></td>
+                                            <td>
+                                                <ul class="list-unstyled mb-0 ps-3">
+                                                    <li th:each="item : ${prosedurList}" th:text="${#strings.isEmpty(item.tahapan)} ? '-' : '• ' + ${item.tahapan}"></li>
+                                                </ul>
+                                            </td>
+                                            <td th:text="${prosedurList[0].dilakukanOleh.fullName ?: prosedurList[0].dilakukanOleh.username}"></td>
+                                            <td>
+                                                <a th:if="${prosedurList[0].dokumenPath}" th:href="@{'/profile-photos/' + ${prosedurList[0].dokumenPath}}" target="_blank" class="btn btn-info btn-sm">
+                                                    <i class="fas fa-download me-1"></i> Lihat
+                                                </a>
+                                                <span th:unless="${prosedurList[0].dokumenPath}" class="text-muted">-</span>
+                                            </td>
+                                        </tr>
+                                    </th:block>
                                 </tbody>
                             </table>
                         </div>
@@ -117,9 +98,102 @@
                 </div>
             </div>
         </div>
-
     </main>
-    <div th:replace="~{fragments/_footer :: footer}"></div>
-</body>
 
+    <div th:replace="~{fragments/_footer :: footer}"></div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const prosedurContainer = document.getElementById('prosedur-container');
+        const addProsedurBtn = document.getElementById('add-prosedur');
+
+        const updateIndexes = () => {
+            const prosedurGroups = prosedurContainer.querySelectorAll('.prosedur-group');
+            prosedurGroups.forEach((group, pIndex) => {
+                group.querySelector('h5').textContent = `Prosedur ${pIndex + 1}`;
+                
+                const removeProsedurBtn = group.querySelector('.remove-prosedur');
+                if (removeProsedurBtn) {
+                   removeProsedurBtn.style.display = prosedurGroups.length > 1 ? 'inline-block' : 'none';
+                }
+
+                // Update index untuk prosedur
+                group.querySelector('input[name="prosedur"]').name = `prosedur`;
+
+                const tahapanInputs = group.querySelectorAll('.tahapan-container .input-group');
+                tahapanInputs.forEach((tahapan, tIndex) => {
+                    tahapan.querySelector('.input-group-text').textContent = `Tahapan ${tIndex + 1}:`;
+                    // Update index untuk tahapan dan prosedurIndex yang terkait
+                    tahapan.querySelector('input[name="tahapan"]').name = `tahapan`;
+                    tahapan.querySelector('input[name="prosedurIndex"]').value = pIndex;
+                    
+                    const removeTahapanBtn = tahapan.querySelector('.remove-tahapan');
+                    if(removeTahapanBtn) {
+                       removeTahapanBtn.style.display = tahapanInputs.length > 1 ? 'inline-block' : 'none';
+                    }
+                });
+            });
+        };
+
+        const addProsedur = () => {
+             const pIndex = prosedurContainer.querySelectorAll('.prosedur-group').length;
+             const newProsedurGroup = document.createElement('div');
+             newProsedurGroup.className = 'prosedur-group border rounded p-3 mb-3';
+             newProsedurGroup.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5>Prosedur</h5>
+                    <button type="button" class="btn btn-danger btn-sm remove-prosedur">Hapus Prosedur</button>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nama Prosedur:</label>
+                    <input type="text" name="prosedur" class="form-control" required>
+                </div>
+                <div class="tahapan-container">
+                    </div>
+                <button type="button" class="btn btn-success btn-sm add-tahapan mt-2"><i class="fas fa-plus me-1"></i>Tambah Tahapan</button>
+             `;
+             prosedurContainer.appendChild(newProsedurGroup);
+             addTahapan(newProsedurGroup.querySelector('.tahapan-container')); // Tambah tahapan pertama
+             updateIndexes();
+        };
+
+        const addTahapan = (container) => {
+            const newTahapan = document.createElement('div');
+            newTahapan.className = 'input-group mb-2';
+            newTahapan.innerHTML = `
+                <span class="input-group-text">Tahapan:</span>
+                <input type="text" name="tahapan" class="form-control">
+                <input type="hidden" name="prosedurIndex" value="">
+                <button type="button" class="btn btn-outline-danger remove-tahapan">X</button>
+            `;
+            container.appendChild(newTahapan);
+        };
+
+        addProsedurBtn.addEventListener('click', addProsedur);
+
+        prosedurContainer.addEventListener('click', function(e) {
+            // Jika tombol 'Tambah Tahapan' di dalam prosedur group diklik
+            if (e.target && e.target.classList.contains('add-tahapan')) {
+                const tahapanContainer = e.target.previousElementSibling;
+                addTahapan(tahapanContainer);
+                updateIndexes();
+            }
+
+            // Jika tombol 'Hapus Prosedur' diklik
+            if (e.target && e.target.classList.contains('remove-prosedur')) {
+                e.target.closest('.prosedur-group').remove();
+                updateIndexes();
+            }
+            
+            // Jika tombol 'X' untuk menghapus tahapan diklik
+            if (e.target && e.target.classList.contains('remove-tahapan')) {
+                e.target.closest('.input-group').remove();
+                updateIndexes();
+            }
+        });
+        
+        // Tambahkan satu prosedur secara default saat halaman dimuat
+        addProsedur();
+    });
+    </script>
+</body>
 </html>

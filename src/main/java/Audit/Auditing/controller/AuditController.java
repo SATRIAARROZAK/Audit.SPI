@@ -23,7 +23,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Optional;
-
+import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.UUID;
 @Controller
 @RequestMapping("/audit")
 public class AuditController {
@@ -86,21 +88,20 @@ public class AuditController {
             return "redirect:/audit/rencana";
         }
         
-        if (surat.getStatus() != StatusSuratTugas.DISETUJUI) {
-            ra.addFlashAttribute("errorMessage", "Kertas kerja hanya bisa dibuat untuk surat tugas yang sudah disetujui.");
-            return "redirect:/audit/rencana";
-        }
-        
         KertasKerjaAuditDto dto = new KertasKerjaAuditDto();
         dto.setSuratTugasId(surat.getId());
 
         List<KertasKerjaAudit> existingKertasKerja = kertasKerjaAuditService.getBySuratTugasId(suratTugasId);
 
+        // Mengelompokkan KertasKerjaAudit berdasarkan prosedurGroup
+        Map<UUID, List<KertasKerjaAudit>> groupedKertasKerja = existingKertasKerja.stream()
+                .collect(Collectors.groupingBy(KertasKerjaAudit::getProsedurGroup));
+
         model.addAttribute("suratTugas", surat);
-        model.addAttribute("kertasKerjaDto", dto); // Ganti nama objek
-        model.addAttribute("listKertasKerja", existingKertasKerja); // Kirim list
+        model.addAttribute("kertasKerjaDto", dto);
+        model.addAttribute("listKertasKerja", groupedKertasKerja); // Kirim map ke view
         model.addAttribute("pageTitle", "Buat Kertas Kerja");
-        return "audit/halaman-kertas-kerja"; // Nama file HTML baru
+        return "audit/halaman-kertas-kerja";
     }
 
     // Ganti method ini dari PostMapping("/halaman-kerja/save")
@@ -120,11 +121,15 @@ public class AuditController {
         if (result.hasErrors()) {
             model.addAttribute("suratTugas", suratOpt.get());
             model.addAttribute("pageTitle", "Buat Kertas Kerja");
-            model.addAttribute("listKertasKerja", kertasKerjaAuditService.getBySuratTugasId(kertasKerjaDto.getSuratTugasId()));
+            // Muat ulang data untuk ditampilkan jika ada error
+            List<KertasKerjaAudit> existingKertasKerja = kertasKerjaAuditService.getBySuratTugasId(kertasKerjaDto.getSuratTugasId());
+            Map<UUID, List<KertasKerjaAudit>> groupedKertasKerja = existingKertasKerja.stream()
+                    .collect(Collectors.groupingBy(KertasKerjaAudit::getProsedurGroup));
+            model.addAttribute("listKertasKerja", groupedKertasKerja);
             return "audit/halaman-kertas-kerja";
         }
 
-        kertasKerjaAuditService.save(kertasKerjaDto, userDetails.getUser());
+        kertasKerjaAuditService.saveDynamic(kertasKerjaDto, userDetails.getUser());
 
         ra.addFlashAttribute("successMessage", "Kertas Kerja berhasil disimpan!");
         return "redirect:/audit/kertas-kerja/new/" + kertasKerjaDto.getSuratTugasId();
