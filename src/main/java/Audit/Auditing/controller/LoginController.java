@@ -24,7 +24,7 @@ public class LoginController {
     // Contoh halaman setelah login sukses
     @GetMapping("/dashboard")
     public String dashboardPage() {
-        return "dashboard"; // Buat file dashboard.html
+        return "layouts/dashboard"; // Buat file dashboard.html
     }
 
     // Anda bisa menambahkan controller untuk registrasi di sini
