@@ -32,7 +32,7 @@ public class AdminController {
     public String showAddUserForm(Model model) {
         model.addAttribute("userDto", new UserDto());
         model.addAttribute("availableRoles", availableRoles);
-        return "admin/add-user";
+        return "pages/admin/add-user";
     }
 
     @PostMapping("/users/save")
@@ -48,12 +48,12 @@ public class AdminController {
 
         if (result.hasErrors()) {
             model.addAttribute("availableRoles", availableRoles);
-            return "admin/add-user";
+            return "pages/admin/add-user";
         }
 
         userService.saveUser(userDto);
         redirectAttributes.addFlashAttribute("successMessage", "User baru berhasil ditambahkan!");
-        return "redirect:/admin/users/list";
+        return "redirect:/pages/admin/users/list";
     }
 
     @GetMapping("/users/list")
@@ -83,7 +83,7 @@ public class AdminController {
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("sortDir", sortDir);
         model.addAttribute("keyword", keyword);
-        return "admin/list-user";
+        return "pages/admin/list-user";
     }
 
     @GetMapping("/users/edit/{id}")
@@ -102,7 +102,7 @@ public class AdminController {
         model.addAttribute("userDto", userDto);
         model.addAttribute("userId", id);
         model.addAttribute("availableRoles", availableRoles);
-        return "admin/edit-user";
+        return "pages/admin/edit-user";
     }
 
     @PostMapping("/users/update/{id}")
@@ -123,12 +123,12 @@ public class AdminController {
         if (result.hasErrors()) {
             model.addAttribute("userId", id);
             model.addAttribute("availableRoles", availableRoles);
-            return "admin/edit-user";
+            return "pages/admin/edit-user";
         }
 
         userService.updateUser(id, userDto);
         redirectAttributes.addFlashAttribute("successMessage", "User berhasil diupdate!");
-        return "redirect:/admin/users/list";
+        return "redirect:/pages/admin/users/list";
     }
 
     @GetMapping("/users/delete/{id}")
@@ -139,6 +139,6 @@ public class AdminController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Gagal menghapus user. " + e.getMessage());
         }
-        return "redirect:/admin/users/list";
+        return "redirect:/pages/admin/users/list";
     }
 }
